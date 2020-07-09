@@ -5,7 +5,7 @@
 (load "juniper.sls")
 (import (juniper))
 
-(define (demo)
+(define (demo-e/p)
   (define je (j-start))
   (j-e/p je "'called in directory, ',1!:43''")
   (j-e/p je "load 'stats/bonsai'")
@@ -19,5 +19,6 @@
   (j-exit je (current-output-port)))
 
 (define J (j-start))
-(define (get)
-  (j-e/p J "]aa=: i. 4 4 3 3 3 3"))
+(define (demo-value)
+  (j-e/p J "]aa=: |.\"1 i. 4 5")
+  (j-get J "aa"))

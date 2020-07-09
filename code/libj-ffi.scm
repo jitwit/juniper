@@ -48,15 +48,36 @@
 
 ;; pointers refer to places within J memory
 ;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+(define j-types
+  '#(boolean string integer float))
+(define-record-type j-value
+  (fields type rank shape data))
 (define (->I)
   (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
-(define (j-get-m j variable)
-  (define jt (->I))
-  (define jr (->I))
-  (define js (->I))
-  (define jd (->I))
-  (list (JGetM (j-engine j) variable jt jr js jd) jt jr js jd)
-  )
+(define (j-get j variable)
+  (define jt (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
+  (define jr (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
+  (define js (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
+  (define jd (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
+  (assert (zero? (JGetM (j-engine j) variable jt jr js jd)))
+  (let* ((t (vector-ref j-types (fx1- (fxlength (ftype-ref I () jt)))))
+	 (r (ftype-ref I () jr))
+	 (s (make-vector r))
+	 (js@ (make-ftype-pointer I (ftype-ref I () js)))
+	 (jd@ (make-ftype-pointer I (ftype-ref I () jd))))
+    (do ((i 0 (fx1+ i)))
+	((= i r))
+      (vector-set! s i (ftype-ref I () js@ i)))
+    (let* ((n (apply * (vector->list s)))
+	   (d (make-vector n)))
+      (do ((i 0 (fx1+ i)))
+	  ((= i n))
+	(vector-set! d i (ftype-ref I () jd@ i)))
+      (foreign-free (ftype-pointer-address jt))
+      (foreign-free (ftype-pointer-address jr))
+      (foreign-free (ftype-pointer-address js))
+      (foreign-free (ftype-pointer-address jd))
+      (make-j-value t r s d))))
 
 ;;;; J call backs
 ;; void _stdcall Joutput(J jt, int type, C* s);

@@ -13,7 +13,13 @@
 	  j-get        ; get value of variable in j engine
 	  JGetM
 	  JGetA
-	  j-get-m      ; use JGetM to get j value of j variable in j engine
+	  j-get        ; use JGetM to get j value of j variable in j engine
+
+	  j-value?
+	  j-value-type
+	  j-value-rank
+	  j-value-shape
+	  j-value-data
 	  )
   (import (chezscheme))
 

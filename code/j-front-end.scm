@@ -56,9 +56,6 @@
   (j-e/p je (string-append "0!:100 '" (read-lines script.ijs) "'"))
   (j-exit je (current-output-port)))
 
-(define (j-get j variable)
-  (JGetA (j-engine j) 1 variable))
-
 (define (j-exit j . port)
   (when (pair? port)
     (j-dump-log j (car port))
