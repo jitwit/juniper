@@ -1,6 +1,7 @@
 (define-ftype J void*)
 (define-ftype I long-long)
 (define-ftype C char)
+(define-ftype B unsigned-8)
 
 ;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 ;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
@@ -60,11 +61,24 @@
   (do ((i 0 (fx1+ i)))
       ((fx= i n) V)
     (vector-set! V i (ftype-ref I () ->j i))))
-(define (decode-string-bytes ->j n)
+(define (decode-boolean-bytes ->j n)
   (define V (make-vector n))
   (do ((i 0 (fx1+ i)))
       ((fx= i n) V)
-    (vector-set! V i (ftype-ref char () ->j i))))
+    (vector-set! V i (ftype-ref B () ->j i))))
+(define (decode-string-bytes ->j n)
+  (define S (make-string n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) S)
+    (string-set! S i (ftype-ref C () ->j i))))
+
+(define (decode-bytes type shape addr)
+  (define n (apply * (vector->list shape)))
+  (case type
+    ((integer) (decode-integral-bytes (make-ftype-pointer I addr) n))
+    ((string)  (decode-string-bytes   (make-ftype-pointer C addr) n))
+    ((boolean) (decode-boolean-bytes  (make-ftype-pointer B addr) n))
+    (else 'todo)))
 
 (define (j-get j variable)
   (define jt (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
@@ -75,17 +89,12 @@
   (let* ((t (vector-ref j-types (fx1- (fxlength (ftype-ref I () jt)))))
 	 (r (ftype-ref I () jr))
 	 (s (decode-integral-bytes (make-ftype-pointer I (ftype-ref I () js)) r))
-	 (d (decode-j-bytes t s (ftype-ref I () js) jd)))
-    (let* ((n (apply * (vector->list s)))
-	   (d (make-vector n)))
-      (do ((i 0 (fx1+ i)))
-	  ((= i n))
-	(vector-set! d i (ftype-ref I () jd@ i)))
-      (foreign-free (ftype-pointer-address jt))
-      (foreign-free (ftype-pointer-address jr))
-      (foreign-free (ftype-pointer-address js))
-      (foreign-free (ftype-pointer-address jd))
-      (make-j-value t r s d))))
+	 (d (decode-bytes t s (ftype-ref I () jd))))
+    (foreign-free (ftype-pointer-address jt))
+    (foreign-free (ftype-pointer-address jr))
+    (foreign-free (ftype-pointer-address js))
+    (foreign-free (ftype-pointer-address jd))
+    (make-j-value t r s d)))
 
 ;;;; J call backs
 ;; void _stdcall Joutput(J jt, int type, C* s);

@@ -20,5 +20,9 @@
 
 (define J (j-start))
 (define (demo-value)
-  (j-e/p J "aa=: i. 3 4")
-  (j-get J "aa"))
+  (j-e/p J "iv=: i. 3 4")
+  (j-e/p J "sv=: 'cat'")
+  (j-e/p J "bv=: 1 p: iv")
+  (display (j-get J "iv")) (newline)
+  (display (j-get J "sv")) (newline)
+  (display (j-get J "bv")) (newline))
