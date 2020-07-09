@@ -2,10 +2,8 @@
 (define-ftype I long-long)
 (define-ftype C char)
 
-;; from qtide
-;; typedef struct A_RECORD {
-;;   I k,flag,m,t,c,n,r,s[1];
-;; }* A;
+;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
 (define-ftype A
   (struct
    (k I)
@@ -45,6 +43,20 @@
 ;; NB. seems to want n = 1
 (define JGetA
   (foreign-procedure "JGetA" (J I string) (* A)))
+(define JGetM
+  (foreign-procedure "JGetM" (J string (* I) (* I) (* I) (* I)) I))
+
+;; pointers refer to places within J memory
+;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+(define (->I)
+  (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
+(define (j-get-m j variable)
+  (define jt (->I))
+  (define jr (->I))
+  (define js (->I))
+  (define jd (->I))
+  (list (JGetM (j-engine j) variable jt jr js jd) jt jr js jd)
+  )
 
 ;;;; J call backs
 ;; void _stdcall Joutput(J jt, int type, C* s);

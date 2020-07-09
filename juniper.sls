@@ -1,4 +1,3 @@
-;; (libj)
 (load-shared-object "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902/bin/libj.so")
 
 (library (juniper)
@@ -12,6 +11,9 @@
 	  j-exit       ; close a j engine
 	  j-dump-log   ; dump j engines ports
 	  j-get        ; get value of variable in j engine
+	  JGetM
+	  JGetA
+	  j-get-m      ; use JGetM to get j value of j variable in j engine
 	  )
   (import (chezscheme))
 

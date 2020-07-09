@@ -17,3 +17,7 @@
   (j-e/p je "(;: 'expr time') , (,. (6!:2 &.>)) 'fibo 25';'mfib 25';'mfib 500' ; 'mfib 500'")
   (j-e/p je "5!:4 < 'mfib'")
   (j-exit je (current-output-port)))
+
+(define J (j-start))
+(define (get)
+  (j-e/p J "]aa=: i. 4 4 3 3 3 3"))
