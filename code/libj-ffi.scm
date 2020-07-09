@@ -2,6 +2,7 @@
 (define-ftype I long-long)
 (define-ftype C char)
 (define-ftype B unsigned-8)
+(define-ftype D double)
 
 ;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 ;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
@@ -71,6 +72,11 @@
   (do ((i 0 (fx1+ i)))
       ((fx= i n) S)
     (string-set! S i (ftype-ref C () ->j i))))
+(define (decode-floating-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    (vector-set! V i (ftype-ref D () ->j i))))
 
 (define (decode-bytes type shape addr)
   (define n (apply * (vector->list shape)))
@@ -78,7 +84,7 @@
     ((integer) (decode-integral-bytes (make-ftype-pointer I addr) n))
     ((string)  (decode-string-bytes   (make-ftype-pointer C addr) n))
     ((boolean) (decode-boolean-bytes  (make-ftype-pointer B addr) n))
-    (else 'todo)))
+    ((float)   (decode-floating-bytes (make-ftype-pointer D addr) n))))
 
 (define (j-get j variable)
   (define jt (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
