@@ -20,5 +20,5 @@
 
 (define J (j-start))
 (define (demo-value)
-  (j-e/p J "]aa=: |.\"1 i. 4 5")
+  (j-e/p J "aa=: i. 3 4")
   (j-get J "aa"))
