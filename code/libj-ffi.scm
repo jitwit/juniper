@@ -3,6 +3,7 @@
 (define-ftype C char)
 (define-ftype B unsigned-8)
 (define-ftype D double)
+(define-ftype Z (struct (re D) (im D)))
 
 ;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 ;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
@@ -41,8 +42,6 @@
   (foreign-procedure "JGetLocale" (J) string))
 (define JGetR
   (foreign-procedure "JGetR" (J) string))
-;; CDPROC A _stdcall JGetA(J jt,I n,C* name);         /* get 3!:1 from name */
-;; NB. seems to want n = 1
 (define JGetA
   (foreign-procedure "JGetA" (J I string) (* A)))
 (define JGetM
@@ -51,7 +50,29 @@
 ;; pointers refer to places within J memory
 ;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 (define j-types
-  '#(boolean string integer float))
+  '#(boolean
+     literal
+     integer
+     float
+     complex
+     boxed
+     extended
+     rational
+     bit-boolean
+     sparse-boolean
+     sparse-literal
+     sparse-integer
+     sparse-floating
+     sparse-complex
+     sparse-boxed
+     symbol
+     unicode-2
+     unicode-4
+     extended-floating
+     extended-complex
+     ;; etc.?
+     ))
+
 (define-record-type j-value
   (fields type rank shape data))
 (define (->I)
@@ -77,14 +98,22 @@
   (do ((i 0 (fx1+ i)))
       ((fx= i n) V)
     (vector-set! V i (ftype-ref D () ->j i))))
+(define (decode-complex-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    (vector-set! V i (make-rectangular (ftype-ref Z (re) ->j i)
+				       (ftype-ref Z (im) ->j i)))))
 
 (define (decode-bytes type shape addr)
   (define n (apply * (vector->list shape)))
   (case type
     ((integer) (decode-integral-bytes (make-ftype-pointer I addr) n))
-    ((string)  (decode-string-bytes   (make-ftype-pointer C addr) n))
+    ((literal)  (decode-string-bytes   (make-ftype-pointer C addr) n))
     ((boolean) (decode-boolean-bytes  (make-ftype-pointer B addr) n))
-    ((float)   (decode-floating-bytes (make-ftype-pointer D addr) n))))
+    ((float)   (decode-floating-bytes (make-ftype-pointer D addr) n))
+    ((complex) (decode-complex-bytes  (make-ftype-pointer Z addr) n))
+    (else 'todo)))
 
 (define (j-get j variable)
   (define jt (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
