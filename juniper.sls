@@ -5,6 +5,16 @@
 	  j-binpath     ; parameter to tell J what to treat as its binary name
 	  profile.ijs   ; parameter to load given profile.ijs file at startup
 
+	  JInit
+	  JFree
+	  JSMX
+	  JDo
+	  JGetLocale
+	  JGetM
+	  JSetM
+	  JOutput
+	  JInput
+
 	  j-e/p         ; eval/print j sentence in given j engine
 	  j-script      ; read file containing a j script
 	  j-start       ; j-start start a j engine

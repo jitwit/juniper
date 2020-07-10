@@ -17,8 +17,13 @@
 (define JGetLocale ; CDPROC C* _stdcall JGetLocale(J jt);
   (foreign-procedure "JGetLocale" (J) string))
 (define JGetR (foreign-procedure "JGetR" (J) string))
-;; (define JGetA (foreign-procedure "JGetA" (J I string) (* A)))
+;; give J some points and it will tell them where to find the variable
+;; stored in variable name string.
 (define JGetM
+  (foreign-procedure "JGetM" (J string (* I) (* I) (* I) (* I)) I))
+;; reverse of JGetM, tell J where to find J data and it'll set the
+;; variable to it
+(define JSetM
   (foreign-procedure "JGetM" (J string (* I) (* I) (* I) (* I)) I))
 
 (define j-types
@@ -105,6 +110,17 @@
       ((fx= i n) V)
     (vector-set! V i (/ (decode-extended-j-integer ->j n (* 2 i))
 			(decode-extended-j-integer ->j n (+ 1 (* 2 i)))))))
+
+(define (decode-extended-floating-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    ;; typedef struct {I e,p;X x;} DX;
+    ;; e is exp, p prec, x mantissa. X=A ie decodable bytes
+    ;; prec of -1 => infinite
+    ;; prec of -2 => _
+    ;; prec of -3 => __
+    (vector-set! V i 'todo)))
 
 ;; jgetobj=: 3 : 0
 ;; 'p j j t c l r'=. i2j memr y,0, 7*SZI
