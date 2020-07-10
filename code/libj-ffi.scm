@@ -11,7 +11,7 @@
    (t I)
    (c I)
    (r I)
-   (s (array 1 I))))
+   (s (* I))))
 (define-ftype AREP (* AREP_RECORD))
 (define-ftype A_RECORD
   (struct
@@ -22,7 +22,7 @@
    (c I)
    (n I)
    (r I)
-   (s (array 1 I))))
+   (s (array 10 I))))
 (define-ftype A (* A_RECORD))
 (define-ftype X A)
 (define-ftype Q (struct (n X) (d X)))
@@ -174,6 +174,30 @@
     (vector-set! V i (/ (decode-extended-j-integer ->j n (* 2 i))
 			(decode-extended-j-integer ->j n (+ 1 (* 2 i)))))))
 
+;; jgetobj=: 3 : 0
+;; 'p j j t c l r'=. i2j memr y,0, 7*SZI
+;; (t,r,y+7*SZI) jfix y+p
+(define (decode-boxed-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    (let* ((type (vector-ref
+		  j-types
+		  (fx1-
+		   (fxlength
+		    (ftype-ref I () (make-ftype-pointer I (ftype-ref I () ->j i))
+			       3)))))
+	   (p (ftype-ref I () (make-ftype-pointer I (ftype-ref I () ->j i)) 0))
+	   (shape (decode-integral-bytes
+		   (make-ftype-pointer I (+ 56 (ftype-ref I () ->j i)))
+		   (fxsrl (- p 56) 3)))
+	   (bytes (+ p (ftype-ref I () ->j i))))
+      (vector-set! V i
+		   (make-j-value type
+				 (vector-length shape)
+				 shape
+				 (decode-bytes type shape bytes))))))
+
 (define (decode-bytes type shape addr)
   (define n (apply * (vector->list shape)))
   (case type
@@ -184,6 +208,8 @@
     ((complex)  (decode-complex-bytes  (make-ftype-pointer Z addr) n))
     ((rational) (decode-rational-bytes (make-ftype-pointer I addr) n))
     ((extended) (decode-extended-bytes (make-ftype-pointer I addr) n))
+    ((boxed)    (decode-boxed-bytes    (make-ftype-pointer I addr) n))
+    ;; boxed will be recursive decoding of j values
     (else 'todo)))
 
 (define (j-get j variable)
