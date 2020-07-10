@@ -144,37 +144,35 @@
       ((fx= i n) V)
     (vector-set! V i (make-rectangular (ftype-ref Z (re) ->j i)
 				       (ftype-ref Z (im) ->j i)))))
-(define (decode-rational-bytes ->j n)
-  (define V (make-vector n))
-  (do ((i 0 (fx1+ i)))
-      ((fx= i n) V)
-    (display-ln (ftype-pointer->sexpr (ftype-ref Q (n) ->j i)))
-    (display-ln (ftype-pointer->sexpr (ftype-ref Q (d) ->j i)))
-    (newline)
-    (vector-set! V i i
-		 ;; (ftype-ref Q (n s) ->j i)
-		 )))
+
 ;; i2j =: (-2+IF64) & ic NB. (ic =: 3!:4)
 ;; szi is 8 here (64bit)
 ;; jgetext=: 3 : 0
 ;; len=. i2j memr y,(7*SZI), SZI
 ;; 10000 #. x: |. i2j memr y,(8*SZI),SZI*len
-;; so need 7 words to represent it? 
+;; so need 7 words to represent it?
+(define (decode-extended-j-integer ->j n off)
+  (let ((len (ftype-ref I () (make-ftype-pointer I (ftype-ref I () ->j off)) 7))
+	(addr (ftype-ref I () ->j off)))
+    (let lp ((k (fx1- len)) (x 0))
+      (if (fx< k 0)
+	  x
+	  (lp (fx1- k)
+	      (+ (ftype-ref I () (make-ftype-pointer I (+ (* k 8) addr)) 8)
+		 (* 10000 x)))))))
+
 (define (decode-extended-bytes ->j n)
   (define V (make-vector n))
   (do ((i 0 (fx1+ i)))
       ((fx= i n) V)
-    ;; seems to gives appropritate length
-    (let ((len (ftype-ref I () (make-ftype-pointer I (ftype-ref I () ->j i)) 7))
-	  (addr (ftype-ref I () ->j i)))
-      (let lp ((k (fx1- len)) (x 0))
-	(if (fx< k 0)
-	    (vector-set! V i x)
-	    (lp (fx1- k)
-		(+ (ftype-ref I ()
-			      (make-ftype-pointer I (+ (* k 8) addr))
-			      8)
-		   (* 10000 x))))))))
+    (vector-set! V i (decode-extended-j-integer ->j n i))))
+
+(define (decode-rational-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    (vector-set! V i (/ (decode-extended-j-integer ->j n (* 2 i))
+			(decode-extended-j-integer ->j n (+ 1 (* 2 i)))))))
 
 (define (decode-bytes type shape addr)
   (define n (apply * (vector->list shape)))
@@ -184,7 +182,7 @@
     ((boolean)  (decode-boolean-bytes  (make-ftype-pointer B addr) n))
     ((float)    (decode-floating-bytes (make-ftype-pointer D addr) n))
     ((complex)  (decode-complex-bytes  (make-ftype-pointer Z addr) n))
-    ((rational) (decode-rational-bytes (make-ftype-pointer Q addr) n))
+    ((rational) (decode-rational-bytes (make-ftype-pointer I addr) n))
     ((extended) (decode-extended-bytes (make-ftype-pointer I addr) n))
     (else 'todo)))
 
