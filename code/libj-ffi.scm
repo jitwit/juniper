@@ -165,16 +165,23 @@
   (define jr (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
   (define js (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
   (define jd (make-ftype-pointer I (foreign-alloc (ftype-sizeof I))))
-  (assert (zero? (JGetM (j-engine j) variable jt jr js jd)))
-  (let* ((t (vector-ref j-types (fx1- (fxlength (ftype-ref I () jt)))))
-	 (r (ftype-ref I () jr))
-	 (s (decode-integral-bytes (make-ftype-pointer I (ftype-ref I () js)) r))
-	 (d (decode-bytes t s (ftype-ref I () jd))))
-    (foreign-free (ftype-pointer-address jt))
-    (foreign-free (ftype-pointer-address jr))
-    (foreign-free (ftype-pointer-address js))
-    (foreign-free (ftype-pointer-address jd))
-    (make-j-value t r s d)))
+  (define sig (JGetM (j-engine j) variable jt jr js jd))
+  (if (zero? sig)
+      (let* ((t (vector-ref j-types (fx1- (fxlength (ftype-ref I () jt)))))
+	     (r (ftype-ref I () jr))
+	     (s (decode-integral-bytes (make-ftype-pointer I (ftype-ref I () js)) r))
+	     (d (decode-bytes t s (ftype-ref I () jd))))
+	(foreign-free (ftype-pointer-address jt))
+	(foreign-free (ftype-pointer-address jr))
+	(foreign-free (ftype-pointer-address js))
+	(foreign-free (ftype-pointer-address jd))
+	(make-j-value t r s d))
+      (begin
+	(foreign-free (ftype-pointer-address jt))
+	(foreign-free (ftype-pointer-address jr))
+	(foreign-free (ftype-pointer-address js))
+	(foreign-free (ftype-pointer-address jd))
+	#f)))
 
 ;; // output type
 (define MTYOFM   1) ; /* formatted result array output */
@@ -217,3 +224,39 @@
 	    string)))
     (lock-object f)
     (foreign-callable-entry-point f)))
+
+(define (chop-vector n V)
+  (define m (fx/ (vector-length V) n))
+  (define W (make-vector m))
+  (do ((i 0 (fx1+ i)) (base 0 (fx+ base n)))
+      ((fx= i m) W)
+    (let ((W-i (make-vector n)))
+      (do ((j 0 (fx1+ j)))
+	  ((fx= j n) (vector-set! W i W-i))
+	(vector-set! W-i j (vector-ref V (fx+ base j)))))))
+
+(define (jvector->svector shape elements)
+  (fold-right chop-vector elements (cdr (vector->list shape))))
+
+(define (j-box? object)
+  (and (j-value? object)
+       (eq? 'boxed (j-value-type object))))
+
+(define (j-scalar? object)
+  (and (j-value? object)
+       (not (eq? 'boxed (j-value-type object)))
+       (zero? (vector-length (j-value-shape object)))))
+
+(define (j->scheme value)
+  ;; (let ((value (j-get J variable))))
+  (and value
+       (cond
+	((j-scalar? value)
+	 (vector-ref (j-value-data value) 0))
+	((j-box? value)
+	 (jvector->svector (j-value-shape value) 
+			   (vector-map j->scheme (j-value-data value))))
+	(else
+	 (jvector->svector (j-value-shape value) (j-value-data value))))))
+
+

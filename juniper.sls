@@ -10,25 +10,27 @@
 	  JSMX          ; give J engine callbacks for i/o
 	  JDo           ; j-do
 	  JGetLocale    ; returns current locale
+	  JGetR         ; return captured state as string
 	  JGetM         ; fill argument pointers with data referenced by given variable
 	  JSetM         ; set variable from data inside given pointers
 	  JOutput       ; given ports for out/log/err, return foreign-callable procedure
 	  JInput        ; given port for in, return foreign-callable procedure
 
 	  j-do          ; give sentence to J to run
+	  j-eval        ; run J sentence and grab result as scheme 
 	  j-e/p         ; j-do, printing output
 	  j-script      ; read file containing a j script
 	  j-start       ; j-start start a j engine
 	  j-exit        ; close a j engine
 	  j-dump-log    ; dump j engines ports
 	  j-get         ; get value of variable in j engine, in j-value record (for now)
+	  j-types       ; vector enumerating J types
 
 	  j-value?      ; scheme record to hold data read from within J engine
 	  j-value-type
 	  j-value-rank
 	  j-value-shape
 	  j-value-data
-	  j-types       ; vector enumerating J types
 
 	  j?            ; j engine record type
 	  j-engine      ; the j engine

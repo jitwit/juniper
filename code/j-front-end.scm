@@ -43,7 +43,7 @@
 
 (define (j-initialize j)
   (j-e/p j (string-append "BINPATH_z_ =: '" (j-binpath) "'"))
-  (j-e/p j (string-append "ARGV_z_ =: <'" "jiffy" "'"))
+  (j-e/p j (string-append "ARGV_z_ =: <'" "juniper" "'"))
   (j-e/p j (string-append "0!:0 < '" (profile.ijs) "'")))
 
 (define (j-start)
@@ -52,9 +52,10 @@
   je)
 
 (define (j-script script.ijs)
-  (define je (j-start))
-  (j-e/p je (string-append "0!:100 '" (read-lines script.ijs) "'"))
-  (j-exit je (current-output-port)))
+  (assert (file-exists? script.ijs))
+  (let ((je (j-start)))
+    (j-do je (string-append "0!:0 <'" script.ijs "'"))
+    (j-exit je (current-output-port))))
 
 (define (j-exit j . port)
   (when (pair? port)
@@ -74,3 +75,17 @@
     (display (get-output-string (j-log j)) where)
     (display "------ error ------" where) (newline where)
     (display (get-output-string (j-err j)) where)))
+
+(define j-eval
+  (case-lambda
+    ((J sentence)
+     (let ((var (fresh-j-var)))
+       (if (j-do J (string-append var " =: " sentence))
+	   (j->scheme (j-get J var))
+	   (begin
+	     (j-dump-log J)
+	     #f))))
+    ((sentence)
+     (let* ((J (j-start)) (result (j-eval J sentence)))
+       (j-exit J)
+       result))))
