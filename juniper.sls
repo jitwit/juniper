@@ -5,34 +5,34 @@
 	  j-binpath     ; parameter to tell J what to treat as its binary name
 	  profile.ijs   ; parameter to load given profile.ijs file at startup
 
-	  JInit
-	  JFree
-	  JSMX
-	  JDo
-	  JGetLocale
-	  JGetM
-	  JSetM
-	  JOutput
-	  JInput
+	  JInit         ; initialize a J engine
+	  JFree         ; free a J engine
+	  JSMX          ; give J engine callbacks for i/o
+	  JDo           ; j-do
+	  JGetLocale    ; returns current locale
+	  JGetM         ; fill argument pointers with data referenced by given variable
+	  JSetM         ; set variable from data inside given pointers
+	  JOutput       ; given ports for out/log/err, return foreign-callable procedure
+	  JInput        ; given port for in, return foreign-callable procedure
 
-	  j-e/p         ; eval/print j sentence in given j engine
+	  j-do          ; give sentence to J to run
+	  j-e/p         ; j-do, printing output
 	  j-script      ; read file containing a j script
 	  j-start       ; j-start start a j engine
 	  j-exit        ; close a j engine
 	  j-dump-log    ; dump j engines ports
-	  j-get         ; get value of variable in j engine
-	  j-get         ; use JGetM to get j value of j variable in j engine
+	  j-get         ; get value of variable in j engine, in j-value record (for now)
 
-	  j-value?
+	  j-value?      ; scheme record to hold data read from within J engine
 	  j-value-type
 	  j-value-rank
 	  j-value-shape
 	  j-value-data
-	  j-types
+	  j-types       ; vector enumerating J types
 
-	  j?
-	  j-engine      ; j engine and its ports
-	  j-in
+	  j?            ; j engine record type
+	  j-engine      ; the j engine
+	  j-in          ; the ports...
 	  j-out
 	  j-log
 	  j-err)
