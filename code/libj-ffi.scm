@@ -4,7 +4,16 @@
 (define-ftype B unsigned-8)
 (define-ftype D double)
 (define-ftype Z (struct (re D) (im D)))
-(define-ftype A
+
+(define-ftype AREP_RECORD
+  (struct
+   (n I)
+   (t I)
+   (c I)
+   (r I)
+   (s (array 1 I))))
+(define-ftype AREP (* AREP_RECORD))
+(define-ftype A_RECORD
   (struct
    (k I)
    (flag I)
@@ -14,34 +23,53 @@
    (n I)
    (r I)
    (s (array 1 I))))
+(define-ftype A (* A_RECORD))
 (define-ftype X A)
 (define-ftype Q (struct (n X) (d X)))
 
-;;  union {
-;;   I k;
-;;   A chain;   // used when block is on free chain
-;;   A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
-;;  } kchain;
-(define-ftype kchain
-  (struct
-   (k I)
-   (chain A)
-   (globalst A)))
-
-;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
-;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
+;; #define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x */
+;; #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended */
+;; #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational */
+;; #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed */
+;; typedef struct AD AD;
+;; typedef AD *A;
 
 
-;; typedef struct AREP_RECORD {
-;;   I n,t,c,r,s[1];
-;; }* AREP;
-(define-ftype AREP
-  (struct
-   (n I)
-   (t I)
-   (c I)
-   (r I)
-   (s (array 1 I))))
+
+;;struct AD {
+;; union {
+;;  I k;
+;;  A chain;
+;;  A globalst;
+;; } kchain;
+;; FLAGT flag;
+;; union {
+;;  I m;
+;;  A back; 
+;;} mback;
+;; union {
+;;  I t;
+;;  A proxychain;
+;; } tproxy;
+;; I c;  // usecount
+;; I n;  // # atoms - always 1 for sparse arrays
+;;#if C_LE
+;; RANKT r;  // rank
+;; US h;   // reserved for allocator.  Not used for AFNJA memory
+;;#if BW==64
+;; UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+;;#endif
+;;#else
+;;#if BW==64
+;; UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
+;;#endif
+;; US h;   // reserved for allocator.  Not used for AFNJA memory
+;; RANKT r;  // rank
+;;#endif
+;; I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
+;;};
+
+
 
 ;;;; jlib.h
 (define JInit ; CDPROC J _stdcall JInit();
@@ -61,8 +89,6 @@
 (define JGetM
   (foreign-procedure "JGetM" (J string (* I) (* I) (* I) (* I)) I))
 
-;; pointers refer to places within J memory
-;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
 (define j-types
   '#(boolean
      literal
@@ -122,9 +148,33 @@
   (define V (make-vector n))
   (do ((i 0 (fx1+ i)))
       ((fx= i n) V)
+    (display-ln (ftype-pointer->sexpr (ftype-ref Q (n) ->j i)))
+    (display-ln (ftype-pointer->sexpr (ftype-ref Q (d) ->j i)))
+    (newline)
     (vector-set! V i i
 		 ;; (ftype-ref Q (n s) ->j i)
 		 )))
+;; i2j =: (-2+IF64) & ic NB. (ic =: 3!:4)
+;; szi is 8 here (64bit)
+;; jgetext=: 3 : 0
+;; len=. i2j memr y,(7*SZI), SZI
+;; 10000 #. x: |. i2j memr y,(8*SZI),SZI*len
+;; so need 7 words to represent it? 
+(define (decode-extended-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    ;; seems to gives appropritate length
+    (let ((len (ftype-ref I () (make-ftype-pointer I (ftype-ref I () ->j i)) 7))
+	  (addr (ftype-ref I () ->j i)))
+      (let lp ((k (fx1- len)) (x 0))
+	(if (fx< k 0)
+	    (vector-set! V i x)
+	    (lp (fx1- k)
+		(+ (ftype-ref I ()
+			      (make-ftype-pointer I (+ (* k 8) addr))
+			      8)
+		   (* 10000 x))))))))
 
 (define (decode-bytes type shape addr)
   (define n (apply * (vector->list shape)))
@@ -134,7 +184,8 @@
     ((boolean)  (decode-boolean-bytes  (make-ftype-pointer B addr) n))
     ((float)    (decode-floating-bytes (make-ftype-pointer D addr) n))
     ((complex)  (decode-complex-bytes  (make-ftype-pointer Z addr) n))
-;;    ((rational) (decode-rational-bytes (make-ftype-pointer Q addr) n))
+    ((rational) (decode-rational-bytes (make-ftype-pointer Q addr) n))
+    ((extended) (decode-extended-bytes (make-ftype-pointer I addr) n))
     (else 'todo)))
 
 (define (j-get j variable)
