@@ -95,7 +95,7 @@
       (if (fx< k 0)
 	  x
 	  (lp (fx1- k)
-	      (+ (ftype-ref I () (make-ftype-pointer I (+ (* k 8) addr)) 8)
+	      (+ (ftype-ref I () (make-ftype-pointer I (fx+ addr (fxsll (fx+ 8 k) 3))))
 		 (* 10000 x)))))))
 
 (define (decode-extended-bytes ->j n)
@@ -108,8 +108,8 @@
   (define V (make-vector n))
   (do ((i 0 (fx1+ i)))
       ((fx= i n) V)
-    (vector-set! V i (/ (decode-extended-j-integer ->j n (* 2 i))
-			(decode-extended-j-integer ->j n (+ 1 (* 2 i)))))))
+    (vector-set! V i (/ (decode-extended-j-integer ->j n (fxsll i 1))
+			(decode-extended-j-integer ->j n (fx1+ (fxsll i 1)))))))
 
 (define (decode-extended-floating-bytes ->j n)
   (define V (make-vector n))
@@ -137,9 +137,9 @@
 			       3)))))
 	   (p (ftype-ref I () (make-ftype-pointer I (ftype-ref I () ->j i)) 0))
 	   (shape (decode-integral-bytes
-		   (make-ftype-pointer I (+ 56 (ftype-ref I () ->j i)))
-		   (fxsrl (- p 56) 3)))
-	   (bytes (+ p (ftype-ref I () ->j i))))
+		   (make-ftype-pointer I (fx+ 56 (ftype-ref I () ->j i)))
+		   (fxsrl (fx- p 56) 3)))
+	   (bytes (fx+ p (ftype-ref I () ->j i))))
       (vector-set! V i
 		   (make-j-value type
 				 (vector-length shape)
@@ -147,7 +147,7 @@
 				 (decode-bytes type shape bytes))))))
 
 (define (decode-bytes type shape addr)
-  (define n (apply * (vector->list shape)))
+  (define n (apply fx* (vector->list shape)))
   (case type
     ((integer)  (decode-integral-bytes (make-ftype-pointer I addr) n))
     ((literal)  (decode-string-bytes   (make-ftype-pointer C addr) n))
