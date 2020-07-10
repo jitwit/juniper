@@ -5,72 +5,6 @@
 (define-ftype D double)
 (define-ftype Z (struct (re D) (im D)))
 
-(define-ftype AREP_RECORD
-  (struct
-   (n I)
-   (t I)
-   (c I)
-   (r I)
-   (s (* I))))
-(define-ftype AREP (* AREP_RECORD))
-(define-ftype A_RECORD
-  (struct
-   (k I)
-   (flag I)
-   (m I)
-   (t I)
-   (c I)
-   (n I)
-   (r I)
-   (s (array 10 I))))
-(define-ftype A (* A_RECORD))
-(define-ftype X A)
-(define-ftype Q (struct (n X) (d X)))
-
-;; #define AK(x)           ((x)->kchain.k)        /* offset of ravel wrt x */
-;; #define XAV(x)          ( (X*)((C*)(x)+AK(x)))  /* extended */
-;; #define QAV(x)          ( (Q*)((C*)(x)+AK(x)))  /* rational */
-;; #define AAV(x)          ( (A*)((C*)(x)+AK(x)))  /* boxed */
-;; typedef struct AD AD;
-;; typedef AD *A;
-
-
-
-;;struct AD {
-;; union {
-;;  I k;
-;;  A chain;
-;;  A globalst;
-;; } kchain;
-;; FLAGT flag;
-;; union {
-;;  I m;
-;;  A back; 
-;;} mback;
-;; union {
-;;  I t;
-;;  A proxychain;
-;; } tproxy;
-;; I c;  // usecount
-;; I n;  // # atoms - always 1 for sparse arrays
-;;#if C_LE
-;; RANKT r;  // rank
-;; US h;   // reserved for allocator.  Not used for AFNJA memory
-;;#if BW==64
-;; UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
-;;#endif
-;;#else
-;;#if BW==64
-;; UI4 fill;   // On 64-bit systems, there will be a padding word here - insert in case compiler doesn't
-;;#endif
-;; US h;   // reserved for allocator.  Not used for AFNJA memory
-;; RANKT r;  // rank
-;;#endif
-;; I s[1];   // shape starts here.  NOTE!! s[0] is always OK to fetch.  We allocate 8 words minimum and s[0] is the last.
-;;};
-
-
-
 ;;;; jlib.h
 (define JInit ; CDPROC J _stdcall JInit();
   (foreign-procedure "JInit" () J))
@@ -82,10 +16,8 @@
   (foreign-procedure "JDo" (J string) int))
 (define JGetLocale ; CDPROC C* _stdcall JGetLocale(J jt);
   (foreign-procedure "JGetLocale" (J) string))
-(define JGetR
-  (foreign-procedure "JGetR" (J) string))
-(define JGetA
-  (foreign-procedure "JGetA" (J I string) (* A)))
+(define JGetR (foreign-procedure "JGetR" (J) string))
+;; (define JGetA (foreign-procedure "JGetA" (J I string) (* A)))
 (define JGetM
   (foreign-procedure "JGetM" (J string (* I) (* I) (* I) (* I)) I))
 
@@ -228,11 +160,6 @@
     (foreign-free (ftype-pointer-address jd))
     (make-j-value t r s d)))
 
-;;;; J call backs
-;; void _stdcall Joutput(J jt, int type, C* s);
-;; int _stdcall Jwd(J jt, int x, A parg, A* pres);
-;; C* _stdcall Jinput(J jt, C*);
-
 ;; // output type
 (define MTYOFM   1) ; /* formatted result array output */
 (define MTYOER   2) ; /* error output */
@@ -241,6 +168,7 @@
 (define MTYOEXIT 5) ; /* exit */
 (define MTYOFILE 6) ; /* output 1!:2[2 */
 
+;;;; Call Backs so J can write stuff and get stuff 
 (define (JOutput out log err)
   (let ((f (foreign-callable
 	    __collect_safe
@@ -265,7 +193,6 @@
     (lock-object f)
     (foreign-callable-entry-point f)))
 
-;; C* _stdcall Jinput(J jt,C* prompt)
 (define (JInput in)
   (let ((f (foreign-callable
 	    (lambda (jt prompt)
