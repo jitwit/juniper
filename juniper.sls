@@ -4,15 +4,13 @@
   (export libj          ; parameter to find j shared object 
 	  j-binpath     ; parameter to tell J what to treat as its binary name
 	  profile.ijs   ; parameter to load given profile.ijs file at startup
-		        
+
 	  j-e/p         ; eval/print j sentence in given j engine
 	  j-script      ; read file containing a j script
 	  j-start       ; j-start start a j engine
 	  j-exit        ; close a j engine
 	  j-dump-log    ; dump j engines ports
 	  j-get         ; get value of variable in j engine
-	  JGetM	        
-	  JGetA	        
 	  j-get         ; use JGetM to get j value of j variable in j engine
 
 	  j-value?
@@ -22,6 +20,7 @@
 	  j-value-data
 	  j-types
 
+	  j?
 	  j-engine      ; j engine and its ports
 	  j-in
 	  j-out

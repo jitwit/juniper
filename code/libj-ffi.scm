@@ -4,9 +4,6 @@
 (define-ftype B unsigned-8)
 (define-ftype D double)
 (define-ftype Z (struct (re D) (im D)))
-
-;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
-;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
 (define-ftype A
   (struct
    (k I)
@@ -17,6 +14,23 @@
    (n I)
    (r I)
    (s (array 1 I))))
+(define-ftype X A)
+(define-ftype Q (struct (n X) (d X)))
+
+;;  union {
+;;   I k;
+;;   A chain;   // used when block is on free chain
+;;   A globalst;  // for local symbol tables (SYMB types), AK points to the active global symbol table when the current sentence started parsing
+;;  } kchain;
+(define-ftype kchain
+  (struct
+   (k I)
+   (chain A)
+   (globalst A)))
+
+;; CDPROC int _stdcall JGetM(J jt, C* name, I* jtype, I* jrank, I* jshape, I* jdata);
+;; typedef A     (_stdcall *JgaType)       (J jt, I t, I n, I r, I*s);
+
 
 ;; typedef struct AREP_RECORD {
 ;;   I n,t,c,r,s[1];
@@ -104,15 +118,23 @@
       ((fx= i n) V)
     (vector-set! V i (make-rectangular (ftype-ref Z (re) ->j i)
 				       (ftype-ref Z (im) ->j i)))))
+(define (decode-rational-bytes ->j n)
+  (define V (make-vector n))
+  (do ((i 0 (fx1+ i)))
+      ((fx= i n) V)
+    (vector-set! V i i
+		 ;; (ftype-ref Q (n s) ->j i)
+		 )))
 
 (define (decode-bytes type shape addr)
   (define n (apply * (vector->list shape)))
   (case type
-    ((integer) (decode-integral-bytes (make-ftype-pointer I addr) n))
+    ((integer)  (decode-integral-bytes (make-ftype-pointer I addr) n))
     ((literal)  (decode-string-bytes   (make-ftype-pointer C addr) n))
-    ((boolean) (decode-boolean-bytes  (make-ftype-pointer B addr) n))
-    ((float)   (decode-floating-bytes (make-ftype-pointer D addr) n))
-    ((complex) (decode-complex-bytes  (make-ftype-pointer Z addr) n))
+    ((boolean)  (decode-boolean-bytes  (make-ftype-pointer B addr) n))
+    ((float)    (decode-floating-bytes (make-ftype-pointer D addr) n))
+    ((complex)  (decode-complex-bytes  (make-ftype-pointer Z addr) n))
+;;    ((rational) (decode-rational-bytes (make-ftype-pointer Q addr) n))
     (else 'todo)))
 
 (define (j-get j variable)
