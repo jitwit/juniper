@@ -47,7 +47,6 @@
   (j-e/p J (string-append "0!:0 < '" (profile.ijs) "'")))
 
 (define (start-j)
-  (boot-j)
   (let ((J (make-jengine-simple)))
     (initialize-j J)
     J))

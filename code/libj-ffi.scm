@@ -125,6 +125,7 @@
 ;; jgetobj=: 3 : 0
 ;; 'p j j t c l r'=. i2j memr y,0, 7*SZI
 ;; (t,r,y+7*SZI) jfix y+p
+;;;; BUG crashes for some boxes, eg while decoding '4 ; & i. 5'
 (define (decode-boxed-bytes ->j n)
   (define V (make-vector n))
   (do ((i 0 (fx1+ i)))

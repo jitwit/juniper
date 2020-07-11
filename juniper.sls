@@ -52,16 +52,10 @@
   (define profile.ijs
     (make-parameter
      (string-append (j-install-path) "/bin/profile.ijs")))
-  (define *j-so-loaded?* #f)
 
   ;; load the goods
   (include "code/misc.scm")
   (include "code/libj-ffi.scm")
   (include "code/j-front-end.scm")
 
-  (define (boot-j)
-    (unless *j-so-loaded?*
-      (load-shared-object (libj))
-      (set! *j-so-loaded?* #t)))
-  
   )
