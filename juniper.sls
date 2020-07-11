@@ -1,5 +1,4 @@
-(load-shared-object "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902/bin/libj.so")
-
+;; ensure libj shared object is loaded
 (library (juniper)
   (export libj          ; parameter to find j shared object 
 	  j-binpath     ; parameter to tell J what to treat as its binary name
@@ -20,9 +19,9 @@
 	  j-eval        ; run J sentence and grab result as scheme 
 	  j-e/p         ; j-do, printing output
 	  j-script      ; read file containing a j script
-	  j-start       ; j-start start a j engine
-	  j-exit        ; close a j engine
-	  j-dump-log    ; dump j engines ports
+	  start-j       ; j-start start a j engine
+	  exit-j        ; close a j engine
+	  dump-log-j    ; dump j engines ports
 	  j-get         ; get value of variable in j engine, in j-value record (for now)
 	  j-types       ; vector enumerating J types
 
@@ -40,17 +39,29 @@
 	  j-err)
   (import (chezscheme))
 
-  ;; params for finding and confiuring J.
+  ;; params for finding and configuring J. The most interesting to
+  ;; modify is probably profile.ijs
+  (define j-install-path
+    (make-parameter "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902"))
   (define libj
-    (make-parameter "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902/bin/libj.so"))
+    (make-parameter
+     (string-append (j-install-path) "/bin/libj.so")))
   (define j-binpath
-    (make-parameter "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902/bin/jconsole"))
+    (make-parameter
+     (string-append (j-install-path) "/bin/jconsole")))
   (define profile.ijs
-    (make-parameter "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902/bin/profile.ijs"))
+    (make-parameter
+     (string-append (j-install-path) "/bin/profile.ijs")))
+  (define *j-so-loaded?* #f)
 
   ;; load the goods
   (include "code/misc.scm")
   (include "code/libj-ffi.scm")
   (include "code/j-front-end.scm")
 
+  (define (boot-j)
+    (unless *j-so-loaded?*
+      (load-shared-object (libj))
+      (set! *j-so-loaded?* #t)))
+  
   )

@@ -236,7 +236,9 @@
 	(vector-set! W-i j (vector-ref V (fx+ base j)))))))
 
 (define (jvector->svector shape elements)
-  (fold-right chop-vector elements (cdr (vector->list shape))))
+  (if (zero? (vector-length shape))
+      elements
+      (fold-right chop-vector elements (cdr (vector->list shape)))))
 
 (define (j-box? object)
   (and (j-value? object)
@@ -248,7 +250,6 @@
        (zero? (vector-length (j-value-shape object)))))
 
 (define (j->scheme value)
-  ;; (let ((value (j-get J variable))))
   (and value
        (cond
 	((j-scalar? value)
@@ -258,5 +259,3 @@
 			   (vector-map j->scheme (j-value-data value))))
 	(else
 	 (jvector->svector (j-value-shape value) (j-value-data value))))))
-
-

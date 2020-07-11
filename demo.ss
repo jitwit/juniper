@@ -2,11 +2,12 @@
   (library-directories (cons "." (library-directories))))
 
 (print-gensym #f)
-(load "juniper.sls")
+(load "build.ss")
 (import (juniper))
 
+;;; Demonstrates calling J addons from scheme
 (define (demo-e/p)
-  (define J (j-start))
+  (define J (start-j))
   (j-e/p J "'called in directory, ',1!:43''")
   (j-e/p J "load 'stats/bonsai'")
   (j-e/p J "bonsai '+/ 1 + i. 1000000'")
@@ -18,8 +19,10 @@
   (j-e/p J "5!:4 < 'mfib'")
   (j-exit J (current-output-port)))
 
+;;; Demonstrates setting variables in J from scheme and grabbing them
+;;; inside scheme
 (define (demo-value)
-  (define J (j-start))
+  (define J (start-j))
   (j-e/p J "'integer';iv=: i. 3 4")
   (j-e/p J "'string';sv=: 'cat'")
   (j-e/p J "'bools';bv=: 1 p: iv")
@@ -42,4 +45,4 @@
   (display (j-get J "bxv1")) (newline)
   (display (j-get J "bxv2")) (newline)
   (display (j-get J "bxv3")) (newline)
-  (j-exit J))
+  (exit-j J (current-output-port)))
