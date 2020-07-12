@@ -55,7 +55,7 @@
 
   ;; load the goods
   (include "code/misc.scm")
-  (include "code/libj-ffi.scm")
-  (include "code/j-front-end.scm")
+  (include "code/libj.scm")
+  (include "code/front-end.scm")
 
   )
