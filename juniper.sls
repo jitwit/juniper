@@ -41,17 +41,12 @@
 
   ;; params for finding and configuring J. The most interesting to
   ;; modify is probably profile.ijs
-  (define j-install-path
-    (make-parameter "/gnu/store/csr51al3xgpv5dsp2czg0gyj36f7kwhh-j-902"))
   (define libj
-    (make-parameter
-     (string-append (j-install-path) "/bin/libj.so")))
+    (make-parameter "libj.so"))
   (define j-binpath
-    (make-parameter
-     (string-append (j-install-path) "/bin/jconsole")))
+    (make-parameter "juniper"))
   (define profile.ijs
-    (make-parameter
-     (string-append (j-install-path) "/bin/profile.ijs")))
+    (make-parameter "profile.ijs"))
 
   ;; load the goods
   (include "code/misc.scm")
