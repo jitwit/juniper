@@ -10,7 +10,8 @@
   (foreign-procedure "JInit" () J))
 (define JFree ; int JFree(J jt)
   (foreign-procedure "JFree" (J) int))
-(define JSMX ; void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
+(define JSMX
+;; void _stdcall JSMX(J jt, void* out, void* wd, void* in, void* poll, I opts)
   (foreign-procedure "JSMX" (J void* void* void* void* I) void))
 (define JDo ; I jdo(J jt, C* lp)
   (foreign-procedure "JDo" (J string) int))
