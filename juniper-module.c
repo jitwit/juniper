@@ -34,28 +34,24 @@ static JST jsxm;
 
 // from perl module
 static C* estring(EE *e, EV s, ptrdiff_t *sz) {
-  *sz = 0;
-  e->copy_string_contents(e, s, NULL, sz);
-  C *p = malloc(*sz);
-  if (p == NULL) { *sz = 0; R NULL; }
-  e->copy_string_contents(e, s, p, sz);
-  R p;
+  *sz = 0; e->copy_string_contents(e, s, NULL, sz);
+  C *es = malloc(*sz); if (es == NULL) { *sz = 0; R NULL; }
+  e->copy_string_contents(e, s, es, sz); R es;
 }
 
-// need to get a hold of the j engine and execute the sentence
 static EV jedo (EE *e,ptrdiff_t n, EV *args, V *ptr) {
   J j = e->get_user_ptr(e,args[0]);
   ptrdiff_t size;
   C *s = estring(e,args[1],&size);
   if (e->non_local_exit_check (e)) { free(s); R NULL; }
-  int r = jdo(j,s);
-  free(s);
-  R e->make_integer(e,r);
+  int r = jdo(j,s); free(s); R e->make_integer(e,r);
 }
 
 static EV jeini (EE *e,ptrdiff_t n, EV *args, V *ptr) {
   R e->make_user_ptr(e,(V*)jfree,jinit());
 }
+
+// need callbacks/initialization
 
 int emacs_module_init (ERT *rt) {
   EE *e      = rt->get_environment(rt);
