@@ -34,30 +34,49 @@ static JIT jinit;
 static JSXT jsmx;
 
 // from perl module
-static C* estring(EE *e, EV s, ptrdiff_t *sz) {
+static C* estring(EE* e, EV s, ptrdiff_t* sz) {
   *sz = 0; e->copy_string_contents(e, s, NULL, sz);
   C *es = malloc(*sz); e->copy_string_contents(e,s,es,sz); R es;
 }
 
-static EV jedo (EE *e,ptrdiff_t n, EV *args, V *ptr) {
+static EV jedo (EE* e, ptrdiff_t n, EV* args, V* ptr) {
   J j = e->get_user_ptr(e,args[0]);
-  ptrdiff_t size; C *s = estring(e,args[1],&size);
+  ptrdiff_t sz; C* s = estring(e,args[1],&sz);
   if (e->non_local_exit_check (e)) { free(s); R NULL; }
   int r = jdo(j,s); free(s); R e->make_integer(e,r);
 }
 
-static EV jeini (EE *e,ptrdiff_t n, EV *args, V *ptr) {
+static EV jeini (EE* e, ptrdiff_t n, EV* args, V* ptr) {
   R e->make_user_ptr(e,(V*)jfree,jinit());
 }
 
-static EV joutput (EE *e, ptrdiff_t n, EV *args, V *ptr) {
+static V jputs (J j, int t, C* s) {
+  if(MTYOEXIT==t) exit((int)(I)s);
+  fputs(s,stdout); fflush(stdout); // assumed to be changed by jesmx
+}
+
+// (JSMX j (JOutput o l e) 0 (JInput i) 0 8)
+// provide: j, (in), out, (...) => sets up output actions for J engine
+static EV jesmx (EE* e, ptrdiff_t n, EV* args, V* ptr) {
+  J j = e->get_user_ptr(e,args[0]);
+  ptrdiff_t sz; C* path = estring(e,args[1],&sz);
+  freopen(path,"w",stdout); // probably really wrong in ways I don't
+			    // know, but stuff is being written to
+			    // target file!
+  jsmx(j,jputs,0,NULL,0,8);
+  return e->make_integer(e,0);
+}
+
+static EV joutput (EE* e, ptrdiff_t n, EV* args, V* ptr) {
+  // freopen   <- could be the way
+  // https://stackoverflow.com/questions/584868/rerouting-stdin-and-stdout-from-c  
   // if (type==MTYOEXIT) blah
 }
 
 // need callbacks/initialization. eventually get/set serialization, too. wd?
 
-int emacs_module_init (ERT *rt) {
-  EE *e      = rt->get_environment(rt);
+int emacs_module_init (ERT* rt) {
+  EE* e      = rt->get_environment(rt);
   
   jh         = dlopen(LIBJ,RTLD_LAZY);
   jinit      = (JIT)dlsym(jh,"JInit");
@@ -76,6 +95,10 @@ int emacs_module_init (ERT *rt) {
 
   args[0]    = e->intern(e,"j-do");
   args[1]    = e->make_function(e,2,2,jedo,"Execute a J Sentence",NULL);
+  e->funcall(e,fset,2,args);
+
+  args[0]    = e->intern(e,"j-smx");
+  args[1]    = e->make_function(e,2,2,jesmx,"Set J i/o ",NULL);
   e->funcall(e,fset,2,args);
 
   args[0]    = e->intern(e, "juniper-module");

@@ -8,7 +8,11 @@
 
 (defun fake-test ()
   (delete-file "blaha.txt")
-  (j-do ej "(a.{~65+(?~26){i.26) (1!:2) < 'blaha.txt'"))
+  (j-smx ej "blaha.txt")
+  (j-do ej "i. 10")
+  ;; (j-do ej "(a.{~65+(?~26){i.26) (1!:2) 4")
+  )
+;; < 'blaha.txt'"))
 
 (fake-test)
 
