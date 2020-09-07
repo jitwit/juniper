@@ -22,7 +22,6 @@ typedef emacs_value EV;
 typedef emacs_env EE;
 typedef struct emacs_runtime ERT;
 
-static V *jh; // dll handle
 static JDT jdo;
 static JFT jfree;
 static JIT jinit;
@@ -65,11 +64,11 @@ static EV jesmx (EE* e, ptrdiff_t n, EV* args, V* ptr) {
 int emacs_module_init (ERT* rt) {
   EE* e      = rt->get_environment(rt);
   
-  jh         = dlopen(LIBJ,RTLD_LAZY);
-  jinit      = (JIT)dlsym(jh,"JInit");
-  jdo        = (JDT)dlsym(jh,"JDo");
-  jfree      = (JFT)dlsym(jh,"JFree");
-  jsmx       = (JSXT)dlsym(jh,"JSMX");
+  V* lj      = dlopen(LIBJ,RTLD_LAZY);
+  jinit      = (JIT) dlsym(lj,"JInit");
+  jdo        = (JDT) dlsym(lj,"JDo");
+  jfree      = (JFT) dlsym(lj,"JFree");
+  jsmx       = (JSXT)dlsym(lj,"JSMX");
 
   EV provide = e->intern(e,"provide");
   EV fset    = e->intern(e,"fset");

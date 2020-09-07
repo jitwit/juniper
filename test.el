@@ -7,15 +7,8 @@
 (defvar ej (new-j))
 
 (defun fake-test ()
+  (delete-file "juniper.txt")
   (j-smx ej "juniper.txt")
-  (j-do ej "i. 10")
-  (j-do ej "''[(a.{~65+(?~26){i.26) (1!:2) 4")
-  (j-do ej "%. ? 3 3 $ 0")
-  (j-do ej "echo BINPATH")
-  (j-do ej "BINPATH -: 1!:43 ''")
-  (j-do ej "ARGV")
-  (j-do ej "echo JVERSION"))
+  (j-do ej "echo JVERSION")) ; wont work unless profile.ijs loads properly
 
 (fake-test)
-
-
