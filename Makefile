@@ -1,19 +1,19 @@
 .PHONY : clean
 
 out =
-libj = /home/jrn/.guix-profile/bin/libj.so
+j-bin = /home/jrn/.guix-profile/bin
 
-build : juniper.so
+build : juniper.so juniper-module.so
 
 juniper.so : juniper.sls code/*.scm
-	scheme --script build.ss $(libj)
+	scheme --script build.ss $(j-bin)/libj.so
 
 juniper-module.so : juniper-module.c
-	gcc -shared -fpic -L/home/jrn/.guix-profile/bin -lj $< -o $@
+	gcc -Wall -ggdb3 -shared -fpic -L$(j-bin) -lj $< -o $@
 
 install :
 	mkdir -p $(out)
 	cp juniper.so $(out)
 
 clean :
-	rm -rf *~ *.so *.o
+	rm -rf *~ *.so *.o juniper.txt

@@ -2,11 +2,7 @@
 int plugin_is_GPL_compatible;
 
 #include <assert.h>
-#include <stddef.h>
-#include <limits.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 #include <dlfcn.h>
 
@@ -18,9 +14,8 @@ typedef void V;
 typedef intmax_t I;
 typedef char C;
 typedef V* J;
-
 typedef V* (*JIT)(); // j init type
-typedef int (*JDT)(J,C*); // j do   type
+typedef int (*JDT)(J,C*); // j do type
 typedef V* (*JFT)(J); // j free type
 typedef V* (*JSXT) (J,V*,V*,V*,V*,I); // j set callbacks type
 typedef emacs_value EV;
@@ -55,26 +50,18 @@ static V jputs (J j, int t, C* s) {
   fputs(s,stdout); fflush(stdout); // assumed to be changed by jesmx
 }
 
-// (JSMX j (JOutput o l e) 0 (JInput i) 0 8)
 // provide: j, (in), out, (...) => sets up output actions for J engine
 static EV jesmx (EE* e, ptrdiff_t n, EV* args, V* ptr) {
   J j = e->get_user_ptr(e,args[0]);
   ptrdiff_t sz; C* path = estring(e,args[1],&sz);
   freopen(path,"a+",stdout); // probably really wrong in ways I don't
-			    // know, but stuff is being written to
-			    // target file!
+ 			     // know, but stuff is being written to
+ 			     // target file!
   jsmx(j,jputs,0,NULL,0,8);
   return e->make_integer(e,0);
 }
 
-static EV joutput (EE* e, ptrdiff_t n, EV* args, V* ptr) {
-  // freopen   <- could be the way
-  // https://stackoverflow.com/questions/584868/rerouting-stdin-and-stdout-from-c  
-  // if (type==MTYOEXIT) blah
-}
-
 // need callbacks/initialization. eventually get/set serialization, too. wd?
-
 int emacs_module_init (ERT* rt) {
   EE* e      = rt->get_environment(rt);
   
@@ -86,7 +73,6 @@ int emacs_module_init (ERT* rt) {
 
   EV provide = e->intern(e,"provide");
   EV fset    = e->intern(e,"fset");
-  EV set     = e->intern(e,"set");
   EV args[2];
 
   args[0]    = e->intern(e,"j-engine");

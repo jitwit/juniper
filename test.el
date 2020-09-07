@@ -5,7 +5,6 @@
 (require 'juniper)
 
 (defvar ej (new-j))
-(j-smx ej "blaha.txt")
 
 (defun fake-test ()
   (j-do ej "i. 10")
@@ -13,7 +12,7 @@
   (j-do ej "%. ? 3 3 $ 0")
   (j-do ej "BINPATH -: 1!:43 ''")
   (j-do ej "ARGV")
-  (j-do ej "echo i. 10"))
+  (j-do ej "echo JVERSION"))
 
 (fake-test)
 
