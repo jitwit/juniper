@@ -7,6 +7,7 @@ int plugin_is_GPL_compatible;
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <dlfcn.h>
 
 #include "juniper-module.h"
@@ -18,29 +19,32 @@ typedef emacs_value EV;
 typedef emacs_env EE;
 typedef struct emacs_runtime ERT;
 
-static JDT jdo;
-static JFT jfree;
-static V* jh;
-
 // need to get a hold of the j engine and execute the sentence
-static EV jedo (EE *env,ptrdiff_t n, EV *args, V *ptr) {
-
+static EV jedo (EE *e,ptrdiff_t n, EV *args, V *ptr) {
+  J j = e->get_user_ptr(e,args[0]);
 }
 
 // dll functions:
 // JInit, JDo, JSMX, JFree, etc.
 int emacs_module_init (ERT *rt) {
   EE *e = rt->get_environment(rt);
-  jh = dlopen(LIBJ,RTLD_LAZY);
+  
+  V *jh = dlopen(LIBJ,RTLD_LAZY);
   J j=((JIT)dlsym(jh,"JInit"))();
-  jdo=((JDT)dlsym(jh,"JDo"));
-  jfree=((JFT)dlsym(jh,"JFree"));
-
-  e->make_user_ptr(e,(V*)jfree,j);
+  JDT jdo=((JDT)dlsym(jh,"JDo"));
+  JFT jfree=((JFT)dlsym(jh,"JFree"));
 
   EV provide = e->intern(e, "provide");
-  EV jm = e->intern(e, "juniper-module");
-  e->funcall(e, provide, 1, &jm);
+  EV fset = e->intern(e,"fset");
+  EV set = e->intern(e,"set");
+  EV args[2];
+
+  args[0]=e->intern(e,"j-engine");
+  args[1]=e->make_user_ptr(e,(V*)jfree,j);
+  e->funcall(e,set,2,args);
+
+  args[0] = e->intern(e, "juniper-module");
+  e->funcall(e,provide,1,args);
   return 0;
 }
 
