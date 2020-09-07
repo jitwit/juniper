@@ -12,6 +12,7 @@ int plugin_is_GPL_compatible;
 
 #define R return
 #define LIBJ "libj.so"
+#define MTYOEXIT 5
 
 typedef void V;
 typedef intmax_t I;
@@ -21,7 +22,7 @@ typedef V* J;
 typedef V* (*JIT)(); // j init type
 typedef int (*JDT)(J,C*); // j do   type
 typedef V* (*JFT)(J); // j free type
-typedef V* (*JST)(); // j set callbacks type
+typedef V* (*JSXT) (J,V*,V*,V*,V*,I); // j set callbacks type
 typedef emacs_value EV;
 typedef emacs_env EE;
 typedef struct emacs_runtime ERT;
@@ -30,19 +31,17 @@ static V *jh; // dll handle
 static JDT jdo;
 static JFT jfree;
 static JIT jinit;
-static JST jsxm;
+static JSXT jsmx;
 
 // from perl module
 static C* estring(EE *e, EV s, ptrdiff_t *sz) {
   *sz = 0; e->copy_string_contents(e, s, NULL, sz);
-  C *es = malloc(*sz); if (es == NULL) { *sz = 0; R NULL; }
-  e->copy_string_contents(e, s, es, sz); R es;
+  C *es = malloc(*sz); e->copy_string_contents(e,s,es,sz); R es;
 }
 
 static EV jedo (EE *e,ptrdiff_t n, EV *args, V *ptr) {
   J j = e->get_user_ptr(e,args[0]);
-  ptrdiff_t size;
-  C *s = estring(e,args[1],&size);
+  ptrdiff_t size; C *s = estring(e,args[1],&size);
   if (e->non_local_exit_check (e)) { free(s); R NULL; }
   int r = jdo(j,s); free(s); R e->make_integer(e,r);
 }
@@ -51,7 +50,11 @@ static EV jeini (EE *e,ptrdiff_t n, EV *args, V *ptr) {
   R e->make_user_ptr(e,(V*)jfree,jinit());
 }
 
-// need callbacks/initialization
+static EV joutput (EE *e, ptrdiff_t n, EV *args, V *ptr) {
+  // if (type==MTYOEXIT) blah
+}
+
+// need callbacks/initialization. eventually get/set serialization, too. wd?
 
 int emacs_module_init (ERT *rt) {
   EE *e      = rt->get_environment(rt);
@@ -60,8 +63,9 @@ int emacs_module_init (ERT *rt) {
   jinit      = (JIT)dlsym(jh,"JInit");
   jdo        = (JDT)dlsym(jh,"JDo");
   jfree      = (JFT)dlsym(jh,"JFree");
+  jsmx       = (JSXT)dlsym(jh,"JSMX");
 
-  EV provide = e->intern(e, "provide");
+  EV provide = e->intern(e,"provide");
   EV fset    = e->intern(e,"fset");
   EV set     = e->intern(e,"set");
   EV args[2];
