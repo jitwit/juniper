@@ -8,7 +8,7 @@ build : juniper.so
 juniper.so : juniper.sls code/*.scm
 	scheme --script build.ss $(libj)
 
-juniper-module.so : juniper-module.c juniper-module.h
+juniper-module.so : juniper-module.c
 	gcc -shared -fpic -L/home/jrn/.guix-profile/bin -lj $< -o $@
 
 install :
