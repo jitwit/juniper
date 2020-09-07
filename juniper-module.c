@@ -60,7 +60,7 @@ static V jputs (J j, int t, C* s) {
 static EV jesmx (EE* e, ptrdiff_t n, EV* args, V* ptr) {
   J j = e->get_user_ptr(e,args[0]);
   ptrdiff_t sz; C* path = estring(e,args[1],&sz);
-  freopen(path,"w",stdout); // probably really wrong in ways I don't
+  freopen(path,"a+",stdout); // probably really wrong in ways I don't
 			    // know, but stuff is being written to
 			    // target file!
   jsmx(j,jputs,0,NULL,0,8);
