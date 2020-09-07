@@ -35,4 +35,6 @@
     (j-eval J sentence)
     (display-message-or-buffer (buffer-string))))
 
+(global-set-key (kbd "M-j") 'j-mini)
+
 (provide 'juniper)
