@@ -1,5 +1,8 @@
 #include <emacs-module.h>
-#include <assert.h>
+typedef void V;typedef intmax_t I;typedef char C;typedef V* J;
+typedef ptrdiff_t DP;typedef V* (*JIT)();typedef int (*JDT)(J,C*);
+typedef V* (*JFT)(J);typedef V* (*JSXT) (J,V*,V*,V*,V*,I);
+typedef emacs_value EV; typedef emacs_env EE;typedef struct emacs_runtime ERT;
 #include <stdlib.h>
 #include <stdio.h>
 #include <dlfcn.h>
@@ -7,10 +10,6 @@
 #define LIBJ "libj.so"
 #define MTYOEXIT 5
 #define EFUN(f) static EV f(EE*e,DP n,EV*a,V*d)
-typedef void V;typedef intmax_t I;typedef char C;typedef V* J;
-typedef ptrdiff_t DP;typedef V* (*JIT)();typedef int (*JDT)(J,C*);
-typedef V* (*JFT)(J);typedef V* (*JSXT) (J,V*,V*,V*,V*,I);
-typedef emacs_value EV; typedef emacs_env EE;typedef struct emacs_runtime ERT;
 int plugin_is_GPL_compatible;
 static JDT jdo;static JFT jfree;static JIT jinit;static JSXT jsmx;
 static V jputs (J j, int t, C* s) // make me not exit *emacs*
@@ -29,7 +28,7 @@ EFUN(jesmx)
 
 int emacs_module_init (ERT* rt)
 { EE* e = rt->get_environment(rt); EV a[2];
-  V* lj = dlopen(LIBJ,RTLD_LAZY); assert(lj);
+  V* lj = dlopen(LIBJ,RTLD_LAZY);
   jinit = (JIT)dlsym(lj,"JInit"); jdo = (JDT)dlsym(lj,"JDo");
   jfree = (JFT)dlsym(lj,"JFree"); jsmx = (JSXT)dlsym(lj,"JSMX");
   EV provide = e->intern(e,"provide"); EV fset = e->intern(e,"fset");
