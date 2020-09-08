@@ -57,7 +57,7 @@ static EV jesmx (EE* e, ptrdiff_t n, EV* args, V* ptr) {
   freopen(path,"a+",stdout); // probably really wrong in ways I don't
  			     // know, but stuff is being written to
  			     // target file!
-  jsmx(j,jputs,0,NULL,0,8);
+  jsmx(j,jputs,NULL,NULL,NULL,2);
   return e->make_integer(e,0);
 }
 
@@ -65,7 +65,7 @@ static EV jesmx (EE* e, ptrdiff_t n, EV* args, V* ptr) {
 int emacs_module_init (ERT* rt) {
   EE* e      = rt->get_environment(rt);
   
-  V* lj      = dlopen(LIBJ,RTLD_LAZY);
+  V* lj      = dlopen(LIBJ,RTLD_LAZY); assert(lj);
   jinit      = (JIT) dlsym(lj,"JInit");
   jdo        = (JDT) dlsym(lj,"JDo");
   jfree      = (JFT) dlsym(lj,"JFree");

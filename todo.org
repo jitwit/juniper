@@ -1,0 +1,13 @@
+
++ input history/proper major mode
++ hooks
+ - viewmat hook
+ - plot hook
+ - plot not pdf
+ - others
++ mode
++ font lock mini buffer? derive mode from mini buffer with appropriate
+  font lock?
++ wd
++ keyboard/stdin input
+

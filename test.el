@@ -4,11 +4,7 @@
 (add-to-list 'load-path "/home/jrn/code/juniper")
 (require 'juniper)
 
-(defvar ej (new-j))
-
 (defun fake-test ()
-  (delete-file "juniper.txt")
-  (j-smx ej "juniper.txt")
-  (j-do ej "echo JVERSION")) ; wont work unless profile.ijs loads properly
+  (j-mini "echo JVERSION")) ; wont work unless profile.ijs loads properly
 
 (fake-test)
