@@ -5,8 +5,19 @@
 (require 'popup)
 (require 'browse-url)
 (require 'filenotify)
+(require 'j-font-lock)
 
 ;;;; groups
+(defgroup juniper-mode nil
+  "A mode for J"
+  :group 'languages
+  :prefix "j-")
+
+(defcustom juniper-mode-hook nil
+  "`juniper-mode'"
+  :type 'hook
+  :group 'j)
+
 ;;;; jfe/dynamic module
 (defcustom juniper-profile-ijs
   "~/code/juniper/profile.ijs"
@@ -50,6 +61,9 @@
     (j-eval J sentence)
     (display-message-or-buffer (buffer-string))))
 
+;; (defun j-clean-temp-outputs ()
+;;   "erase all the juniper output files"
+;;   (j-mini "*./ (1!:55 :: 1:) 1 dir '/tmp/juniper*'"))
 
 ;;;; documentation
 (defun the-NuVoc ()
@@ -112,121 +126,63 @@
     (newline))
   (view-buffer-other-window j-viewmat-buffer))
 
-;; probably want `make-process' with argument `:command' as `nil'
+;; probably want `make-process' with argument `:command' as `nil'?
 ;;;; evaluation
-(defgroup j-console nil
-  "REPL integration extention for `j-mode'"
-  :group 'applications
-  :group 'j
-  :prefix "j-console-")
+;; (defun j-console ()
+;;   "Ensures a running j-console-cmd session and switches focus to
+;; the containing buffer"
+;;   (interactive)
+;;   (switch-to-buffer-other-window (process-buffer (j-console-ensure-session)))
+;;   (inferior-juniper-mode))
 
-(defcustom j-console-cmd "ijconsole"
-  "Name of the executable used for the J REPL session"
-  :type 'string
-  :group 'j-console)
+;; (defun j-console-execute-region (start end)
+;;   "Sends current region to the j-console-cmd session and exectues it"
+;;   (interactive "r")
+;;   (let ((region (buffer-substring-no-properties start end))
+;;         (session (j-console-ensure-session)))
+;;     (pop-to-buffer (process-buffer session))
+;;     (goto-char (point-max))
+;;     (insert region)
+;;     (comint-send-input)
+;;     (other-window 1)))
 
-(defcustom j-console-cmd-args '() ;; '("-prompt")
-  "Arguments to be passed to the j-console-cmd on start"
-  :type 'string
-  :group 'j-console)
+;; (defun j-console-execute-line ()
+;;   "Sends current line to the j-console-cmd session and exectues it"
+;;   (interactive)
+;;   (j-console-execute-region (point-at-bol) (point-at-eol)))
 
-(defcustom j-console-cmd-init-file nil
-  "Full path to the file who's contents are sent to the
-  j-console-cmd on start
-
-Should be NIL if there is no file not the empty string"
-  :type 'string
-  :group 'j-console)
-
-(defcustom j-console-cmd-buffer-name "J"
-  "Name of the buffer which contains the j-console-cmd session"
-  :type 'string
-  :group 'j-console)
-
-(defvar j-console-comint-input-filter-function nil
-  "J mode specific mask for comint input filter function")
-
-(defvar j-console-comint-output-filter-function nil
-  "J mode specific mask for comint output filter function")
-
-;; before output, there's n*3 spaces in buffer from prompts...
-;; can avoid possibly, maybe.. actually this is quite horrible.
-(defvar j-console-comint-preoutput-filter-function
-  (lambda (out)
-    (replace-regexp-in-string (rx line-start (+ "   "))
-			      ""
-			      out)
-    out)
-  "J mode specific mask for comint preoutput filter function")
-
-(defun j-console-create-session ()
-  "Starts a comint session wrapped around the j-console-cmd"
-
-  (apply 'make-comint j-console-cmd-buffer-name
-         j-console-cmd j-console-cmd-init-file j-console-cmd-args)
-  (mapc
-   (lambda (comint-hook-sym)
-     (let ((local-comint-hook-fn-sym
-            (intern
-             (replace-regexp-in-string
-              "s$" "" (concat "j-console-" (symbol-name comint-hook-sym))))))
-       (when (symbol-value local-comint-hook-fn-sym)
-         (add-hook comint-hook-sym (symbol-value local-comint-hook-fn-sym)))))
-   '(comint-input-filter-functions
-     comint-output-filter-functions
-     comint-preoutput-filter-functions)))
-
-(defun j-console-ensure-session ()
-  "Checks for a running j-console-cmd comint session and either
-  returns it or starts a new session and returns that"
-  (or (get-process j-console-cmd-buffer-name)
-      (progn
-        (j-console-create-session)
-        (get-process j-console-cmd-buffer-name))))
-
-(define-derived-mode inferior-j-mode comint-mode "Inferior J"
-  "Major mode for J inferior process.")
-
-;;;###autoload
-(defun j-console ()
-  "Ensures a running j-console-cmd session and switches focus to
-the containing buffer"
-  (interactive)
-  (switch-to-buffer-other-window (process-buffer (j-console-ensure-session)))
-  (inferior-j-mode))
-
-(defun j-console-execute-region (start end)
-  "Sends current region to the j-console-cmd session and exectues it"
-  (interactive "r")
-  (let ((region (buffer-substring-no-properties start end))
-        (session (j-console-ensure-session)))
-    (pop-to-buffer (process-buffer session))
-    (goto-char (point-max))
-    (insert region)
-    (comint-send-input)
-    (insert "\n   ") ;; how to still get a prompt in "jconsole" buffer?
-;; vvv currently preoutput filter. buggy on examples such as '3 3
-;;    3 $ 0 1000', but i'd rather have that than this horrible current
-;;    mess (replace-regexp-in-string (rx line-start (+ " ")) "" out)
-    (other-window 1)))
-
-(defun j-console-execute-line ()
-  "Sends current line to the j-console-cmd session and exectues it"
-  (interactive)
-  (j-console-execute-region (point-at-bol) (point-at-eol)))
-
-(defun j-console-execute-buffer ()
-  "Sends current buffer to the j-console-cmd session and exectues it"
-  (interactive)
-  (j-console-execute-region (point-min) (point-max)))
+;; (defun j-console-execute-buffer ()
+;;   "Sends current buffer to the j-console-cmd session and exectues it"
+;;   (interactive)
+;;   (j-console-execute-region (point-min) (point-max)))
 
 ;;;; convenience
+(defvar juniper-mode-keymap
+  (let ((map (make-sparse-keymap)))
+;;    (define-key map (kbd "C-c !")   'j-console)
+;;    (define-key map (kbd "C-c C-c") 'j-console-execute-buffer)
+;;    (define-key map (kbd "C-c C-r") 'j-console-execute-region)
+    ;;    (define-key map (kbd "C-c C-l") 'j-console-execute-line)
+    (global-set-key (kbd "C-c C-j") 'joogle)
+    (define-key map (kbd "M-p")     'prettify-symbols-mode)
+    map)
+  "Keymap for J major mode")
+
+(define-derived-mode juniper-mode prog-mode "J"
+  "Major mode for writing J."
+  :syntax-table j-syntax-table
+  (setq ; one day: font-lock-multiline t
+        font-lock-defaults j-font-locks
+	prettify-symbols-alist j->apl)
+  ;; (pretty-add-keywords nil j->apl)
+  (use-local-map juniper-mode-keymap))
+
+(add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
 (global-set-key (kbd "M-j") 'j-mini)
-(global-set-key (kbd "C-c C-j") 'joogle)
 (file-notify-add-watch juniper-viewmat-png
 		       '(change)
 		       (lambda (e)
-			 (princ e)
+			 ;; (princ e)
 			 (j-viewmat)))
-;; minibuffer-inactive-mode <= a major-mode
+
 (provide 'juniper)
