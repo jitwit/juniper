@@ -1,5 +1,6 @@
 
 + input history/proper major mode
++ completion based on ~names~?
 + hooks
  - viewmat hook
  - plot hook

@@ -5,6 +5,7 @@
 (require 'juniper)
 
 (defun fake-test ()
-  (j-mini "echo JVERSION")) ; wont work unless profile.ijs loads properly
+  (j-mini "echo JVERSION")
+  (j-do J "((,: 255&-) ? 3 $ 256) viewmat ? 1000 1000 $ 0 [ require 'viewmat'"))
 
 (fake-test)

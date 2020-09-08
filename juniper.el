@@ -4,11 +4,22 @@
 (require 'NuVoc)
 (require 'popup)
 (require 'browse-url)
+(require 'filenotify)
+
+;;;; groups
+
 
 ;;;; jfe/dynamic module
 (defcustom juniper-profile-ijs
   "~/code/juniper/profile.ijs"
   "your J initialization script")
+
+(defcustom juniper-viewmat-png
+  "~/j902-user/temp/viewmat.png"
+  "viewmat file")
+
+(defvar j-viewmat-buffer
+  (get-buffer-create "viewmat"))
 
 ; (defcustom juniper-buffer "*juniper*" "juniper buffer")
 
@@ -90,10 +101,27 @@
   (interactive)
   (browse-url "~/.guix-profile/share/j/addons/docs/help/index.htm"))
 
+;;;; viewmat
+
+;; have viewmat buffer
+;; use insert-image-file
+(defun j-viewmat ()
+  "open and view a viewmat image"
+  (when (buffer-live-p j-viewmat-buffer)
+    (kill-buffer j-viewmat-buffer))
+  (setq j-viewmat-buffer (get-buffer-create "viewmat"))
+  (with-current-buffer j-viewmat-buffer
+    (insert-image-file juniper-viewmat-png)
+    (newline))
+  (view-buffer-other-window j-viewmat-buffer))
 
 ;;;; convenience
 (global-set-key (kbd "M-j") 'j-mini)
 (global-set-key (kbd "C-c C-j") 'joogle)
-
+(file-notify-add-watch juniper-viewmat-png
+		       '(change)
+		       (lambda (e)
+			 (j-viewmat)))
+;; minibuffer-inactive-mode <= a major-mode
 
 (provide 'juniper)
