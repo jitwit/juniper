@@ -107,7 +107,7 @@
     (when urls
       (browse-url (popup-menu* urls)))))
 
-(defun jdocs ()
+(defun j-docs ()
   "only works on my guix when j-docs-help addon is present"
   (interactive)
   (browse-url "~/.guix-profile/share/j/addons/docs/help/index.htm"))
@@ -163,13 +163,14 @@
 ;;    (define-key map (kbd "C-c C-c") 'j-console-execute-buffer)
 ;;    (define-key map (kbd "C-c C-r") 'j-console-execute-region)
     ;;    (define-key map (kbd "C-c C-l") 'j-console-execute-line)
-    (global-set-key (kbd "C-c C-j") 'joogle)
+    (global-set-key (kbd "C-c i")   'j-docs)
+    (global-set-key (kbd "C-c j")   'joogle)
     (define-key map (kbd "M-p")     'prettify-symbols-mode)
     map)
   "Keymap for J major mode")
 
 (define-derived-mode juniper-mode prog-mode "J"
-  "Major mode for writing J."
+  "Major mode for wielding J."
   :syntax-table j-syntax-table
   (setq ; one day: font-lock-multiline t
         font-lock-defaults j-font-locks
