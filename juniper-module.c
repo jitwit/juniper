@@ -26,7 +26,9 @@ typedef struct emacs_runtime ERT;
 
 static JDT jdo;static JFT jfree;static JIT jinit;static JSXT jsmx;
 
-// from perl module
+// get required size by first sending a NULL pointer to be
+// filled. `copy_string_contents' fills that the required
+// length. having that, we can allocate a big enough string and fill.
 static C* estring(EE* e, EV s, ptrdiff_t* sz)
 { *sz = 0; e->copy_string_contents(e, s, NULL, sz);
   C *es = malloc(*sz); e->copy_string_contents(e,s,es,sz); R es; }
