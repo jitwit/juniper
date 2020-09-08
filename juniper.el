@@ -7,8 +7,6 @@
 (require 'filenotify)
 
 ;;;; groups
-
-
 ;;;; jfe/dynamic module
 (defcustom juniper-profile-ijs
   "~/code/juniper/profile.ijs"
@@ -22,14 +20,13 @@
   (get-buffer-create "viewmat"))
 
 ; (defcustom juniper-buffer "*juniper*" "juniper buffer")
-
 (defun new-j ()
   "create and initialize a J engine"
   (let ((J (j-engine)))
     (j-do J "ARGV_z_ =: 'emacs'")
     (j-do J (concat "0!:0 < '" (expand-file-name juniper-profile-ijs) "'"))
     (j-do J "BINPATH_z_ =: 1!:43''")
-    ;; NB. todo: add hook to display viewmat in emacs buffer    
+    ;; NB. suppress viewmat from trying to open file
     (j-do J "VISIBLE_jviewmat_ =: 0 [ require 'viewmat plot'")
     J))
 
@@ -121,7 +118,7 @@
 (file-notify-add-watch juniper-viewmat-png
 		       '(change)
 		       (lambda (e)
+			 (princ e)
 			 (j-viewmat)))
 ;; minibuffer-inactive-mode <= a major-mode
-
 (provide 'juniper)
