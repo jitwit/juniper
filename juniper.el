@@ -1,11 +1,11 @@
 ;;; -*- lexical-binding: t; -*-
 (require 'juniper-module)
+(require 'juniper-font-lock)
 (require 'pretty-mode)
 (require 'NuVoc)
 (require 'popup)
 (require 'browse-url)
 (require 'filenotify)
-(require 'j-font-lock)
 
 ;;;; groups
 (defgroup juniper-mode nil
@@ -16,7 +16,7 @@
 (defcustom juniper-mode-hook nil
   "`juniper-mode'"
   :type 'hook
-  :group 'j)
+  :group 'juniper)
 
 ;;;; jfe/dynamic module
 (defcustom juniper-profile-ijs
