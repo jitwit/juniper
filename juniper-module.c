@@ -1,3 +1,4 @@
+
 #include <emacs-module.h>
 int plugin_is_GPL_compatible;
 

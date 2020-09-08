@@ -1,0 +1,2 @@
+
+Incorporating J in emacs through dynamic modules (wip).

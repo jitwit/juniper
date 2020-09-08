@@ -37,6 +37,3 @@ md temp
 
 NB. boot up J and load startup.ijs if it exists
 0!:0 <jpathsep (4!:55 (;:'userx ids md'), ids)]system,'/util/boot.ijs'
-require 'viewmat plot'
-NB. VISIBLE_jviewmat_ =: 0 NB. todo: add hook to display viewmat in emacs buffer
-
