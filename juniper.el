@@ -52,10 +52,20 @@
   (setq J (new-j)))
 
 (defun j-eval (J sentence)
+  "interpret a single sentence"
   (if (eq J nil) (error "error! J machine is nil")
     (let ((j-out (make-temp-file "juniper")))
       (j-smx J j-out)
       (j-do J sentence)
+      (insert-file-contents j-out))))
+
+(defun j-eval* (J sentences)
+  "interpret several sentences"
+  (if (eq J nil) (error "error! J machine is nil")
+    (let ((j-in  (make-temp-file "juniper" nil nil sentences))
+	  (j-out (make-temp-file "juniper")))
+      (j-smx J j-out)
+      (j-do J (concat "0!:0 < '" j-in "'"))
       (insert-file-contents j-out))))
 
 (defun j-over-mini (sentence)
@@ -68,10 +78,25 @@
 (defun j-over-region (a b)
   "Send region to J"
   (interactive "r")
+  (unless (buffer-live-p j-output-buffer)
+    (setq j-output-buffer (get-buffer-create "J")))
   (let ((sentence (buffer-substring-no-properties a b)))
     (pop-to-buffer j-output-buffer)
     (goto-char (point-max))
     (j-eval J sentence)
+    (goto-char (point-max))
+    (other-window 1)))
+
+(defun j-over-region* (a b)
+  "Send region to J"
+  (interactive "r")
+  (unless (buffer-live-p j-output-buffer)
+    (setq j-output-buffer (get-buffer-create "J")))
+  (let ((sentence (buffer-substring-no-properties a b)))
+    (pop-to-buffer j-output-buffer)
+    (goto-char (point-max))
+    (j-eval* J sentence)
+    (goto-char (point-max))
     (other-window 1)))
 
 (defun j-over-line ()
@@ -79,10 +104,13 @@
   (interactive)
   (j-over-region (point-at-bol) (point-at-eol)))
 
-(defun j-over-buffer () ;; plz fix me, spelling error, whereas j-over-line ok
+(defun j-over-buffer ()
+  ;; plz fix me, spelling error, whereas j-over-line ok?  have J cd to
+  ;; where file is... seems to happen when defining, =:. still works
+  ;; from mini buffer...
   "Send buffer to J"
   (interactive)
-  (j-over-region (point-min) (point-max)))
+  (j-over-region* (point-min) (point-max)))
 
 ;;;; documentation
 (defun j-find-thing (thing)
@@ -132,9 +160,8 @@
     (kill-buffer j-viewmat-buffer))
   (setq j-viewmat-buffer (get-buffer-create "viewmat"))
   (with-current-buffer j-viewmat-buffer
-    (insert-image-file juniper-viewmat-png)
-    (newline))
-  (view-buffer-other-window j-viewmat-buffer))
+    (insert-image-file juniper-viewmat-png))
+  (view-buffer j-viewmat-buffer))
 
 ;; probably want `make-process' with argument `:command' as `nil'?
 ;;;; evaluation
@@ -143,7 +170,7 @@
 (defvar juniper-mode-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") 'j-over-buffer)
-    (define-key map (kbd "C-c C-l") 'j-over-line)
+    (define-key map (kbd "C-c l")   'j-over-line)
     (define-key map (kbd "C-c i")   'j-docs)
     (define-key map (kbd "C-c j")   'joogle)
     (define-key map (kbd "M-p")     'prettify-symbols-mode)
@@ -155,8 +182,7 @@
   :syntax-table j-syntax-table
   (setq ; one day: font-lock-multiline t
         font-lock-defaults j-font-locks
-	prettify-symbols-alist j->apl)
-  ;; (pretty-add-keywords nil j->apl)
+	prettify-symbols-alist j->apl) ;; (pretty-add-keywords nil j->apl)
   (use-local-map juniper-mode-keymap))
 
 (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))

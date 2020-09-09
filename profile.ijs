@@ -1,5 +1,4 @@
 NB. J profile
-NB. JFE sets BINPATH_z_ and ARGV_z_
 jpathsep_z_=: '/'&(('\' I.@:= ])})
 home=. 2!:5'HOME'
 bin =. BINPATH_z_=: 'emacs'
@@ -10,8 +9,7 @@ user=. home,userx=. '/j902-user'
 ids=. ;:'addons bin break config home install snap system tools temp user'
 SystemFolders_j_=: ids,.jpathsep@".&.>ids
 md=. 3 : 0
-a=. jpathsep y,'/'
-if. -.#1!:0 }:a do. for_n. I. a='/' do. 1!:5 :: [ <n{.a end. end.
+if. -.#1!:0 }:a=.y,'/' do. for_n. I. a='/' do. 1!:5 :: [ <n{.a end. end.
 )
 md &.> (user,'/projects');break;config;snap;temp
 NB. boot up J and load startup.ijs if it exists

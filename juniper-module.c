@@ -24,10 +24,8 @@ EFUN(jeini) { R e->make_user_ptr(e,(V*)jfree,jinit()); }
 EFUN(jesmx)
 { J j=e->get_user_ptr(e,a[0]);C*o=estring(e,a[1]);freopen(o,"a+",stdout);free(o);
   jsmx(j,jputs,NULL,NULL,NULL,2); R e->make_integer(e,0); }
-
 int emacs_module_init (ERT* rt)
-{ EE* e = rt->get_environment(rt); EV a[2];
-  V* lj = dlopen(LIBJ,RTLD_LAZY);
+{ EE* e = rt->get_environment(rt); EV a[2]; V* lj = dlopen(LIBJ,RTLD_LAZY);
   jinit = (JIT)dlsym(lj,"JInit"); jdo = (JDT)dlsym(lj,"JDo");
   jfree = (JFT)dlsym(lj,"JFree"); jsmx = (JSXT)dlsym(lj,"JSMX");
   EV provide = e->intern(e,"provide"); EV fset = e->intern(e,"fset");
