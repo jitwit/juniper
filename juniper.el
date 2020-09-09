@@ -169,7 +169,7 @@
 ;;;; mode
 (defvar juniper-mode-keymap
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c") 'j-over-buffer)
+    (define-key map (kbd "C-c c")   'j-over-buffer)
     (define-key map (kbd "C-c l")   'j-over-line)
     (define-key map (kbd "C-c i")   'j-docs)
     (define-key map (kbd "C-c j")   'joogle)

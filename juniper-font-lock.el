@@ -3,10 +3,10 @@
   :group 'juniper
   :prefix "j-font-lock-")
 
-(defgroup j-faces nil
+(defgroup juniper-faces nil
   "J"
   :group 'juniper
-  :group 'j-font-lock)
+  :group 'juniper-font-lock)
 
 (defvar j-verb-face
   (defface j-verb-face
