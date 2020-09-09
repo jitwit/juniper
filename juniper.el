@@ -7,8 +7,6 @@
 (require 'browse-url)
 (require 'filenotify)
 
-;;;; map files => j processes
-
 ;;;; groups
 (defgroup juniper-mode nil
   "A mode for J"
@@ -35,7 +33,6 @@
 (defvar j-output-buffer
   (get-buffer-create "J"))
 
-; (defcustom juniper-buffer "*juniper*" "juniper buffer")
 (defun new-j ()
   "create and initialize a J engine"
   (let ((J (j-engine)))
@@ -46,36 +43,49 @@
     (j-do J "VISIBLE_jviewmat_ =: 0 [ require 'viewmat plot'")
     J))
 
-(defvar J
-  (new-j)
-  "quick and dirty world-wide J")
+(defvar place->j
+  (make-hash-table :test 'equal)
+  "Table mapping files? to J instances")
 
-(defun j-reset ()
-  (setq J (new-j)))
+;; j instances should have J engine, home directory, optionally:
+;; project main, project test... maybe should just learn projectile
+;; (or similar)?
+(defun create-j-instance (where)
+  "associate a location with a J, unless already associated"
+  (unless (gethash where place->j)
+    (let ((J (new-j))
+	  (out (get-buffer-create (concat "J <" where ">"))))
+      (j-do J (concat "1!:44 '" (expand-file-name where) "'"))
+      (puthash where
+	       `((engine . ,J)
+		 (where . ,where)
+		 (out . ,out))
+	       place->j))))
 
 (defun j-eval (J sentence)
   "interpret a single sentence"
-  (if (eq J nil) (error "error! J machine is nil")
-    (let ((j-out (make-temp-file "juniper")))
-      (j-smx J j-out)
-      (j-do J sentence)
-      (insert-file-contents j-out))))
+  (let ((j-out (make-temp-file "juniper/"))
+	(engine (cdr (assq 'engine J))))
+    (j-smx engine j-out)
+    (j-do engine sentence)
+    (insert-file-contents j-out)))
 
 (defun j-eval* (J sentences)
   "interpret several sentences"
-  (if (eq J nil) (error "error! J machine is nil")
-    (let ((j-in  (make-temp-file "juniper" nil nil sentences))
-	  (j-out (make-temp-file "juniper")))
-      (j-smx J j-out)
-      (j-do J (concat "0!:0 < '" j-in "'"))
-      (insert-file-contents j-out))))
+  (let ((j-in  (make-temp-file "juniper/" nil nil sentences))
+	(j-out (make-temp-file "juniper/"))
+	(engine (cdr (assq 'engine J))))
+    (j-smx engine j-out)
+    (j-do engine (concat "0!:0 < '" j-in "'"))
+    (insert-file-contents j-out)))
 
 (defun j-over-mini (sentence)
   "execute J sentence from mini buffer"
   (interactive "sJ: ")
-  (with-temp-buffer
-    (j-eval J sentence)
-    (display-message-or-buffer (buffer-string))))
+  (let ((J (gethash "~" place->j)))
+    (with-temp-buffer
+      (j-eval J sentence)
+      (display-message-or-buffer (buffer-string)))))
 
 (defun j-over-region (a b)
   "Send region to J"
@@ -187,13 +197,17 @@
 	prettify-symbols-alist j->apl) ;; (pretty-add-keywords nil j->apl)
   (use-local-map juniper-mode-keymap))
 
-(add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
-(global-set-key (kbd "M-j") 'j-over-mini)
-;; too shoddy for now
-;; (file-notify-add-watch juniper-viewmat-png
-;; 		       '(change)
-;; 		       (lambda (e)
-;; 			 ;; (princ e)
-;; 			 (j-viewmat)))
+(let ((/tmp/juniper (concat (temporary-file-directory) "juniper")))
+  (unless (file-exists-p /tmp/juniper)
+    (mkdir /tmp/juniper))
+  (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
+  (global-set-key (kbd "M-j") 'j-over-mini)
+  (create-j-instance "~")
+  ;; too shoddy for now
+  ;; (file-notify-add-watch juniper-viewmat-png
+  ;; 		       '(change)
+  ;; 		       (lambda (e)
+  ;; 			 ;; (princ e)
+  ;; 			 (j-viewmat)))
 
-(provide 'juniper)
+  (provide 'juniper))
