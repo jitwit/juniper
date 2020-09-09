@@ -19,17 +19,17 @@
   :group 'juniper)
 
 ;;;; jfe/dynamic module
-(defcustom juniper-profile-ijs
+(defcustom j-profile-ijs
   "~/code/juniper/profile.ijs"
   "your J initialization script"
   :group 'juniper)
 
-(defcustom juniper-binpath
+(defcustom j-binpath
   "~/.guix-profile/bin"
   "the directory J expects to find libj.so, jconsole, and such"
   :group 'juniper)
 
-(defcustom juniper-viewmat-png
+(defcustom j-viewmat-png
   "~/j902-user/temp/viewmat.png"
   "viewmat file"
   :group 'juniper)
@@ -41,8 +41,8 @@
   "create and initialize a J engine"
   (let ((J (j-engine)))
     (j-do J "ARGV_z_ =: 'emacs'")
-    (j-do J (concat "BINPATH_z_ =: '" (expand-file-name juniper-binpath) "'"))
-    (j-do J (concat "0!:0 < '" (expand-file-name juniper-profile-ijs) "'"))
+    (j-do J (concat "BINPATH_z_ =: '" (expand-file-name j-binpath) "'"))
+    (j-do J (concat "0!:0 < '" (expand-file-name j-profile-ijs) "'"))
     ;; NB. suppress viewmat from trying to open file itself
     (j-do J "VISIBLE_jviewmat_ =: 0 [ require 'viewmat plot'")
     J))
@@ -82,7 +82,7 @@
     (insert-file-contents j-out)))
 
 (defun j-over-mini (sentence)
-  "execute J sentence from mini buffer"
+  "execute J sentence from mini buffer with global J instance"
   (interactive "sJ: ")
   (let ((J (gethash "~" juniper-place->j)))
     (with-temp-buffer
@@ -124,7 +124,11 @@
   (interactive)
   (let* ((where (buffer-file-name))
 	 (J (gethash where juniper-place->j)))
-    (cond (J (j-over-region J (point-at-bol) (point-at-eol)))
+    (cond (J
+	   (let ((t0 (current-time)))
+	     (j-over-region J (point-at-bol) (point-at-eol))
+	     (princ (format "[juniper] dt : %f"
+			    (float-time (time-subtract (current-time) t0))))))
 	  (t (j-create-instance where) (j-over-line)))))
 
 (defun j-over-buffer ()
@@ -132,7 +136,11 @@
   (interactive)
   (let* ((where (buffer-file-name))
 	 (J (gethash where juniper-place->j)))
-    (cond (J (j-over-region* J (point-min) (point-max)))
+    (cond (J
+	   (let ((t0 (current-time)))
+	     (j-over-region* J (point-min) (point-max))
+	     (princ (format "[juniper] dt : %f"
+			    (float-time (time-subtract (current-time) t0))))))
 	  (t (j-create-instance where) (j-over-buffer)))))
 
 ;;;; documentation
