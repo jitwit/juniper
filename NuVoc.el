@@ -316,7 +316,7 @@
          (rank "_ _")
          (url "https://code.jsoftware.com/wiki/Vocabulary/dollarco")
          (description "Self-Reference")))
-    (J (Adverb "u~")
+    (J (Adverb "~")
        (info
          (valence monad)
          (rank "_")
@@ -344,7 +344,7 @@
          (rank "0 0")
          (url "https://code.jsoftware.com/wiki/Vocabulary/tildeco#dyadic")
          (description "Not-Equal")))
-    (J (Adverb "m~")
+    (J (Adverb "~")
        (info
          (valence monad)
          (rank "0")

@@ -7,6 +7,8 @@
 (require 'browse-url)
 (require 'filenotify)
 
+;;;; map files => j processes
+
 ;;;; groups
 (defgroup juniper-mode nil
   "A mode for J"
@@ -187,10 +189,11 @@
 
 (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
 (global-set-key (kbd "M-j") 'j-over-mini)
-(file-notify-add-watch juniper-viewmat-png
-		       '(change)
-		       (lambda (e)
-			 ;; (princ e)
-			 (j-viewmat)))
+;; too shoddy for now
+;; (file-notify-add-watch juniper-viewmat-png
+;; 		       '(change)
+;; 		       (lambda (e)
+;; 			 ;; (princ e)
+;; 			 (j-viewmat)))
 
 (provide 'juniper)
