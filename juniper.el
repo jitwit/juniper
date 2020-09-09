@@ -105,12 +105,12 @@
   (j-over-region (point-at-bol) (point-at-eol)))
 
 (defun j-over-buffer ()
-  ;; plz fix me, spelling error, whereas j-over-line ok?  have J cd to
-  ;; where file is... seems to happen when defining, =:. still works
-  ;; from mini buffer...
   "Send buffer to J"
   (interactive)
-  (j-over-region* (point-min) (point-max)))
+  (let ((file (buffer-file-name)))
+    (when file
+      (j-do J (concat "1!:44 (i:&'/' {. ]) '" file "'")))
+    (j-over-region* (point-min) (point-max))))
 
 ;;;; documentation
 (defun j-find-thing (thing)

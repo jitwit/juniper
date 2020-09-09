@@ -2,16 +2,11 @@
 + input history/proper major mode
 + completion based on ~names~?
 + hooks
- - viewmat hook
- - plot hook
- - plot not pdf
- - others
-+ mode
+ - improve viewmat/image stuff
 + font lock mini buffer? derive mode from mini buffer with appropriate
-  font lock?
 + wd
 + keyboard/stdin input
-
++ improve output handling
 
 some resources in addition to emacs docs:
   https://phst.eu/emacs-modules
