@@ -21,11 +21,18 @@
 ;;;; jfe/dynamic module
 (defcustom juniper-profile-ijs
   "~/code/juniper/profile.ijs"
-  "your J initialization script")
+  "your J initialization script"
+  :group 'juniper)
+
+(defcustom juniper-binpath
+  "~/.guix-profile/bin"
+  "the directory J expects to find libj.so, jconsole, and such"
+  :group 'juniper)
 
 (defcustom juniper-viewmat-png
   "~/j902-user/temp/viewmat.png"
-  "viewmat file")
+  "viewmat file"
+  :group 'juniper)
 
 (defvar j-viewmat-buffer
   (get-buffer-create "viewmat"))
@@ -33,34 +40,34 @@
 (defvar j-output-buffer
   (get-buffer-create "J"))
 
-(defun new-j ()
+(defun j-new ()
   "create and initialize a J engine"
   (let ((J (j-engine)))
     (j-do J "ARGV_z_ =: 'emacs'")
+    (j-do J (concat "BINPATH_z_ =: '" (expand-file-name juniper-binpath) "'"))
     (j-do J (concat "0!:0 < '" (expand-file-name juniper-profile-ijs) "'"))
-    (j-do J "BINPATH_z_ =: 1!:43''")
     ;; NB. suppress viewmat from trying to open file itself
     (j-do J "VISIBLE_jviewmat_ =: 0 [ require 'viewmat plot'")
     J))
 
-(defvar place->j
+(defvar juniper-place->j
   (make-hash-table :test 'equal)
   "Table mapping files? to J instances")
 
 ;; j instances should have J engine, home directory, optionally:
 ;; project main, project test... maybe should just learn projectile
 ;; (or similar)?
-(defun create-j-instance (where)
+(defun j-create-instance (where)
   "associate a location with a J, unless already associated"
-  (unless (gethash where place->j)
-    (let ((J (new-j))
+  (unless (gethash where juniper-place->j)
+    (let ((J (j-new))
 	  (out (get-buffer-create (concat "J <" where ">"))))
       (j-do J (concat "1!:44 '" (expand-file-name where) "'"))
       (puthash where
 	       `((engine . ,J)
 		 (where . ,where)
 		 (out . ,out))
-	       place->j))))
+	       juniper-place->j))))
 
 (defun j-eval (J sentence)
   "interpret a single sentence"
@@ -82,7 +89,7 @@
 (defun j-over-mini (sentence)
   "execute J sentence from mini buffer"
   (interactive "sJ: ")
-  (let ((J (gethash "~" place->j)))
+  (let ((J (gethash "~" juniper-place->j)))
     (with-temp-buffer
       (j-eval J sentence)
       (display-message-or-buffer (buffer-string)))))
@@ -202,7 +209,7 @@
     (mkdir /tmp/juniper))
   (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
   (global-set-key (kbd "M-j") 'j-over-mini)
-  (create-j-instance "~")
+  (j-create-instance "~")
   ;; too shoddy for now
   ;; (file-notify-add-watch juniper-viewmat-png
   ;; 		       '(change)

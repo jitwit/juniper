@@ -1,7 +1,7 @@
 NB. J profile
 jpathsep_z_=: '/'&(('\' I.@:= ])})
+bin =. BINPATH_z_ NB. customizable through juniper.el
 home=. 2!:5'HOME'
-bin =. BINPATH_z_=: 'emacs'
 install=. home,'/.guix-profile/share/j'
 'addons system tools'=. install&, &.> '/addons';'/system';'/tools'
 user=. home,userx=. '/j902-user'
@@ -11,6 +11,5 @@ SystemFolders_j_=: ids,.jpathsep@".&.>ids
 md=. 3 : 0
 if. -.#1!:0 }:a=.y,'/' do. for_n. I. a='/' do. 1!:5 :: [ <n{.a end. end.
 )
-md &.> (user,'/projects');break;config;snap;temp
-NB. boot up J and load startup.ijs if it exists
+md &.> (user,'/projects');break;config;snap;temp NB. should handle in emacs?
 0!:0 <jpathsep (4!:55 (;:'userx ids md'), ids)]system,'/util/boot.ijs'

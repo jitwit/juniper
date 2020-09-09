@@ -1,49 +1,39 @@
-(defgroup j-font-lock nil
-  "J"
-  :group 'juniper
-  :prefix "j-font-lock-")
-
-(defgroup juniper-faces nil
-  "J"
-  :group 'juniper
-  :group 'juniper-font-lock)
-
 (defvar j-verb-face
   (defface j-verb-face
     `((t (:foreground "#117EFF")))
   "I."
-  :group 'juniper-faces))
+  :group 'juniper))
 
 (defvar j-adverb-face
   (defface j-adverb-face
     `((t (:foreground "#FF9C55")))
   "&"
-  :group 'juniper-faces))
+  :group 'juniper))
 
 (defvar j-conjunction-face
   (defface j-conjunction-face
     `((t (:foreground "#FF0D4D")))
   "^:"
-  :group 'juniper-faces))
+  :group 'juniper))
 
 (defvar j-noun-face
   (defface j-noun-face
     `((t (:foreground "#BF456E")))
   "a."
-  :group 'juniper-faces))
+  :group 'juniper))
 
 (defvar j-is-face
   (defface j-is-face
     `((t (:foreground "#004839")))
     ; "#2F789F"
   "avg =. +/ % #"
-  :group 'juniper-faces))
+  :group 'juniper))
 
 (defvar j-copula-face
   (defface j-copula-face
     `((t (:foreground "#808080")))
   "=."
-  :group 'juniper-faces))
+  :group 'juniper))
 
 ;; based on: https://wjmn.github.io/posts/j-can-look-like-apl/
 (defvar j->apl
