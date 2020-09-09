@@ -30,6 +30,9 @@
 (defvar j-viewmat-buffer
   (get-buffer-create "viewmat"))
 
+(defvar j-output-buffer
+  (get-buffer-create "J"))
+
 ; (defcustom juniper-buffer "*juniper*" "juniper buffer")
 (defun new-j ()
   "create and initialize a J engine"
@@ -37,7 +40,7 @@
     (j-do J "ARGV_z_ =: 'emacs'")
     (j-do J (concat "0!:0 < '" (expand-file-name juniper-profile-ijs) "'"))
     (j-do J "BINPATH_z_ =: 1!:43''")
-    ;; NB. suppress viewmat from trying to open file
+    ;; NB. suppress viewmat from trying to open file itself
     (j-do J "VISIBLE_jviewmat_ =: 0 [ require 'viewmat plot'")
     J))
 
@@ -49,29 +52,39 @@
   (setq J (new-j)))
 
 (defun j-eval (J sentence)
-  (let ((j-out (make-temp-file "juniper")))
-    (j-smx J j-out)
-    (j-do J sentence)
-    (insert-file-contents j-out)))
+  (if (eq J nil) (error "error! J machine is nil")
+    (let ((j-out (make-temp-file "juniper")))
+      (j-smx J j-out)
+      (j-do J sentence)
+      (insert-file-contents j-out))))
 
-(defun j-mini (sentence)
+(defun j-over-mini (sentence)
   "execute J sentence from mini buffer"
   (interactive "sJ: ")
   (with-temp-buffer
     (j-eval J sentence)
     (display-message-or-buffer (buffer-string))))
 
-;; (defun j-clean-temp-outputs ()
-;;   "erase all the juniper output files"
-;;   (j-mini "*./ (1!:55 :: 1:) 1 dir '/tmp/juniper*'"))
+(defun j-over-region (a b)
+  "Send region to J"
+  (interactive "r")
+  (let ((sentence (buffer-substring-no-properties a b)))
+    (pop-to-buffer j-output-buffer)
+    (goto-char (point-max))
+    (j-eval J sentence)
+    (other-window 1)))
+
+(defun j-over-line ()
+  "Send line to J"
+  (interactive)
+  (j-over-region (point-at-bol) (point-at-eol)))
+
+(defun j-over-buffer () ;; plz fix me, spelling error, whereas j-over-line ok
+  "Send buffer to J"
+  (interactive)
+  (j-over-region (point-min) (point-max)))
 
 ;;;; documentation
-(defun the-NuVoc ()
-  (read (format "(progn %s)"
-                (with-temp-buffer
-                  (insert-file-contents "data/j.sexp")
-                  (buffer-string)))))
-
 (defun j-find-thing (thing)
   "Find information about thing (exact match)"
   (interactive "sthing: ")
@@ -113,9 +126,6 @@
   (browse-url "~/.guix-profile/share/j/addons/docs/help/index.htm"))
 
 ;;;; viewmat
-
-;; have viewmat buffer
-;; use insert-image-file
 (defun j-viewmat ()
   "open and view a viewmat image"
   (when (buffer-live-p j-viewmat-buffer)
@@ -128,41 +138,12 @@
 
 ;; probably want `make-process' with argument `:command' as `nil'?
 ;;;; evaluation
-;; (defun j-console ()
-;;   "Ensures a running j-console-cmd session and switches focus to
-;; the containing buffer"
-;;   (interactive)
-;;   (switch-to-buffer-other-window (process-buffer (j-console-ensure-session)))
-;;   (inferior-juniper-mode))
 
-;; (defun j-console-execute-region (start end)
-;;   "Sends current region to the j-console-cmd session and exectues it"
-;;   (interactive "r")
-;;   (let ((region (buffer-substring-no-properties start end))
-;;         (session (j-console-ensure-session)))
-;;     (pop-to-buffer (process-buffer session))
-;;     (goto-char (point-max))
-;;     (insert region)
-;;     (comint-send-input)
-;;     (other-window 1)))
-
-;; (defun j-console-execute-line ()
-;;   "Sends current line to the j-console-cmd session and exectues it"
-;;   (interactive)
-;;   (j-console-execute-region (point-at-bol) (point-at-eol)))
-
-;; (defun j-console-execute-buffer ()
-;;   "Sends current buffer to the j-console-cmd session and exectues it"
-;;   (interactive)
-;;   (j-console-execute-region (point-min) (point-max)))
-
-;;;; convenience
+;;;; mode
 (defvar juniper-mode-keymap
   (let ((map (make-sparse-keymap)))
-;;    (define-key map (kbd "C-c !")   'j-console)
-;;    (define-key map (kbd "C-c C-c") 'j-console-execute-buffer)
-;;    (define-key map (kbd "C-c C-r") 'j-console-execute-region)
-    ;;    (define-key map (kbd "C-c C-l") 'j-console-execute-line)
+    (define-key map (kbd "C-c C-c") 'j-over-buffer)
+    (define-key map (kbd "C-c C-l") 'j-over-line)
     (define-key map (kbd "C-c i")   'j-docs)
     (define-key map (kbd "C-c j")   'joogle)
     (define-key map (kbd "M-p")     'prettify-symbols-mode)
@@ -179,7 +160,7 @@
   (use-local-map juniper-mode-keymap))
 
 (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
-(global-set-key (kbd "M-j") 'j-mini)
+(global-set-key (kbd "M-j") 'j-over-mini)
 (file-notify-add-watch juniper-viewmat-png
 		       '(change)
 		       (lambda (e)
