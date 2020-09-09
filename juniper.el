@@ -37,9 +37,6 @@
 (defvar j-viewmat-buffer
   (get-buffer-create "viewmat"))
 
-(defvar j-output-buffer
-  (get-buffer-create "J"))
-
 (defun j-new ()
   "create and initialize a J engine"
   (let ((J (j-engine)))
@@ -70,20 +67,18 @@
 	       juniper-place->j))))
 
 (defun j-eval (J sentence)
-  "interpret a single sentence"
-  (let ((j-out (make-temp-file "juniper/"))
-	(engine (cdr (assq 'engine J))))
-    (j-smx engine j-out)
-    (j-do engine sentence)
+  "have `J' interpret a single `sentence'"
+  (let ((j-out (make-temp-file "juniper/")))
+    (j-smx J j-out)
+    (j-do J sentence)
     (insert-file-contents j-out)))
 
 (defun j-eval* (J sentences)
-  "interpret several sentences"
+  "have `J' interpret several `sentences' through 0!:0"
   (let ((j-in  (make-temp-file "juniper/" nil nil sentences))
-	(j-out (make-temp-file "juniper/"))
-	(engine (cdr (assq 'engine J))))
-    (j-smx engine j-out)
-    (j-do engine (concat "0!:0 < '" j-in "'"))
+	(j-out (make-temp-file "juniper/")))
+    (j-smx J j-out)
+    (j-do J (concat "0!:0 < '" j-in "'"))
     (insert-file-contents j-out)))
 
 (defun j-over-mini (sentence)
@@ -91,45 +86,54 @@
   (interactive "sJ: ")
   (let ((J (gethash "~" juniper-place->j)))
     (with-temp-buffer
-      (j-eval J sentence)
+      (j-eval (cdr (assq 'engine J)) sentence)
       (display-message-or-buffer (buffer-string)))))
 
-(defun j-over-region (a b)
+(defun j-over-region (J a b)
   "Send region to J"
   (interactive "r")
-  (unless (buffer-live-p j-output-buffer)
-    (setq j-output-buffer (get-buffer-create "J")))
-  (let ((sentence (buffer-substring-no-properties a b)))
-    (pop-to-buffer j-output-buffer)
-    (goto-char (point-max))
-    (j-eval J sentence)
-    (goto-char (point-max))
-    (other-window 1)))
+  (let ((engine (cdr (assq 'engine J)))
+	(out (cdr (assq 'out J))))
+    ;; todo get-buffer-create doesn't make a new one
+    ;; (unless (buffer-live-p out) (setq out (get-buffer out)))
+    (let ((sentences (buffer-substring-no-properties a b)))
+      (j-do engine (concat "1!:44 '" default-directory "'"))
+      (pop-to-buffer out)
+      (goto-char (point-max))
+      (j-eval engine sentences)
+      (goto-char (point-max))
+      (other-window 1))))
 
-(defun j-over-region* (a b)
+(defun j-over-region* (J a b)
   "Send region to J"
   (interactive "r")
-  (unless (buffer-live-p j-output-buffer)
-    (setq j-output-buffer (get-buffer-create "J")))
-  (let ((sentence (buffer-substring-no-properties a b)))
-    (pop-to-buffer j-output-buffer)
-    (goto-char (point-max))
-    (j-eval* J sentence)
-    (goto-char (point-max))
-    (other-window 1)))
+  (let ((engine (cdr (assq 'engine J)))
+	(out (cdr (assq 'out J))))
+    ;; todo get-buffer-create doesn't make a new one
+    ;; (unless (buffer-live-p out) (setq out (get-buffer out)))
+    (let ((sentences (buffer-substring-no-properties a b)))
+      (j-do engine (concat "1!:44 '" default-directory "'"))
+      (pop-to-buffer out)
+      (goto-char (point-max))
+      (j-eval* engine sentences)
+      (goto-char (point-max))
+      (other-window 1))))
 
 (defun j-over-line ()
   "Send line to J"
   (interactive)
-  (j-over-region (point-at-bol) (point-at-eol)))
+  (let* ((where (buffer-file-name))
+	 (J (gethash where juniper-place->j)))
+    (cond (J (j-over-region J (point-at-bol) (point-at-eol)))
+	  (t (j-create-instance where) (j-over-line)))))
 
 (defun j-over-buffer ()
   "Send buffer to J"
   (interactive)
-  (let ((file (buffer-file-name)))
-    (when file
-      (j-do J (concat "1!:44 (i:&'/' {. ]) '" file "'")))
-    (j-over-region* (point-min) (point-max))))
+  (let* ((where (buffer-file-name))
+	 (J (gethash where juniper-place->j)))
+    (cond (J (j-over-region* J (point-min) (point-max)))
+	  (t (j-create-instance where) (j-over-buffer)))))
 
 ;;;; documentation
 (defun j-find-thing (thing)
@@ -209,7 +213,7 @@
     (mkdir /tmp/juniper))
   (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . juniper-mode))
   (global-set-key (kbd "M-j") 'j-over-mini)
-  (j-create-instance "~")
+  (j-create-instance "~"))
   ;; too shoddy for now
   ;; (file-notify-add-watch juniper-viewmat-png
   ;; 		       '(change)
@@ -217,4 +221,5 @@
   ;; 			 ;; (princ e)
   ;; 			 (j-viewmat)))
 
-  (provide 'juniper))
+
+(provide 'juniper)
