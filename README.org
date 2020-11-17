@@ -1,2 +1,3 @@
+* Juniper
 
-Incorporating J in emacs through dynamic modules (wip).
+ChezScheme and J get hitched
