@@ -96,7 +96,9 @@
       (if (fx< k 0)
 	  x
 	  (lp (fx1- k)
-	      (+ (ftype-ref I () (make-ftype-pointer I (fx+ addr (fxsll (fx+ 8 k) 3))))
+	      (+ (ftype-ref I () (make-ftype-pointer I (fx+ addr
+							    (fxsll (fx+ 8 k)
+								   3))))
 		 (* 10000 x)))))))
 
 (define (decode-extended-bytes ->j n)
@@ -127,6 +129,10 @@
 ;; 'p j j t c l r'=. i2j memr y,0, 7*SZI
 ;; (t,r,y+7*SZI) jfix y+p
 ;;;; BUG crashes for some boxes, eg while decoding '4 ; & i. 5'
+;;;;    so, those involving rank 1 , eg i. 4... rank 2 or atomic seem fine?
+;;;;    so, '3 ; |. i. 5' is ok but '3 ; i. 5' is not!
+;;;;    so, '1 ; (3 ; 5) ; 4 ; 5' also has problems. one of the leaves gets
+;;;;        rank 6, shape 2 0 0 0 0 0, data ''
 (define (decode-boxed-bytes ->j n)
   (define V (make-vector n))
   (do ((i 0 (fx1+ i)))
@@ -254,10 +260,7 @@
 (define (j->scheme value)
   (and value
        (cond
-	((j-scalar? value)
-	 (vector-ref (j-value-data value) 0))
 	((j-box? value)
 	 (jvector->svector (j-value-shape value) 
 			   (vector-map j->scheme (j-value-data value))))
-	(else
-	 (jvector->svector (j-value-shape value) (j-value-data value))))))
+	(else value))))
