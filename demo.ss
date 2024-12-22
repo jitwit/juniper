@@ -17,7 +17,7 @@
   (j-e/p J "mfib =: ([: +/ [: $:\"0 (_1 _2)&+)`]@.(<&2) M.")
   (j-e/p J "(;: 'expr time') , (,. (6!:2 &.>)) 'fibo 25';'mfib 25';'mfib 500' ; 'mfib 500'")
   (j-e/p J "5!:4 < 'mfib'")
-  (j-exit J (current-output-port)))
+  (exit-j J (current-output-port)))
 
 ;;; Demonstrates setting variables in J from scheme and grabbing them
 ;;; inside scheme

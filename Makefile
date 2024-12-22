@@ -2,6 +2,7 @@
 
 out =
 j-bin = /home/jrn/.guix-profile/bin
+version = 0.1
 
 build : juniper.so
 

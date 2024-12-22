@@ -23,9 +23,9 @@
 		(loop (get-line in))))))))))
 
 (define (fresh-j-var)
-  (let ((var (gensym->unique-string (gensym))))
+  ;; so that it is mutable...
+  (let ((var (list->string (string->list (gensym->unique-string (gensym))))))
     (do ((i (fx1- (string-length var)) (fx1- i)))
 	((char=? #\- (string-ref var i))
 	 (string-set! var i #\_)
-	 var)))
-  )
+	 var))))
